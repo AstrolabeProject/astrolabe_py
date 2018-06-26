@@ -6,24 +6,32 @@ Purpose: Uploads FITS files to iRods, extracts and uploads metadata to iRods, cr
 
 ## Build
 
-This software requires Python 3.6+.
+This software requires Python 3.6+. Within a virtual environment, do
 
 ```
-   > gradle clean build
+   > pip install -r requirements.txt
+   > pip install .
+```
+
+## Tests
+
+```
+   > cd test
+   > python fits_meta_test.py
 ```
 
 ## Usage
 
-To run the JAR file:
+To run the program:
 
 ```
-   > java -jar applicantToCsv.jar input-JSON-file
+   > 
 ```
 
 Run Options:
 
 ```
-Usage: java -jar applicantToCsv.jar [-h] [-v] input-JSON-file
+Usage: astrolabe_uploader upload-directory-path
  -h,--help      Show usage information.
  -v,--verbose   Display more information.
 ```
@@ -31,7 +39,7 @@ Usage: java -jar applicantToCsv.jar [-h] [-v] input-JSON-file
 Example Usage:
 
 ```
-java -jar applicantToCsv.jar applicants-2017.json
+astrolabe_uploader -v myDataDirectory
 ```
 
 ## License
