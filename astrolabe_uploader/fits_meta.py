@@ -7,7 +7,7 @@ import warnings
 import sys
 from astropy.io import fits
 
-# Dictionary of alternates for more standard metadata keys
+# Dictionary of alternates for standard FITS metadata keys
 ALTERNATE_KEYS_MAP = {
 'spatial_axis_1_number_bins': 'NAXIS1',
 'spatial_axis_2_number_bins': 'NAXIS2',

@@ -2,7 +2,7 @@
 #
 # Python code to (unit) test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Get Suite working correctly. Add tests of fits_metadata.
+#   Last Modified: Use FILEPATH_KEY. Add extract_metadata tests.
 #
 from astropy.io import fits
 import astrolabe_uploader.fits_meta as fm
@@ -12,6 +12,7 @@ def suite():
   suite = unittest.TestSuite()
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(GetMetadataKeysTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(HandleCtypeMappingTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ExtractMetadataTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsMetadataTestCase))
   return suite
 
@@ -40,14 +41,14 @@ class GetMetadataKeysTestCase(FitsMetaTestCase):
     keys = fm.get_metadata_keys({"keyfile": "empty-metadata-keyfile.txt"})
     self.assertNotEqual(keys, None)
     self.assertEqual(len(keys), 0)
-    self.assertNotIn("filepath", keys)
+    self.assertNotIn(fm.FILEPATH_KEY, keys)
 
   def test_get_metadata_keys(self):
     "Gets a list of desired metadata keys from keyfile"
     keys = fm.get_metadata_keys(self.default_options)
     self.assertNotEqual(keys, None)
     self.assertEqual(len(keys), 52)
-    self.assertIn("filepath", keys)
+    self.assertIn(fm.FILEPATH_KEY, keys)
 
 
 class HandleCtypeMappingTestCase(FitsMetaTestCase):
@@ -86,6 +87,55 @@ class HandleCtypeMappingTestCase(FitsMetaTestCase):
     self.assertIn("declination", [md[0] for md in metadata])
 
 
+class ExtractMetadataTestCase(FitsMetaTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.hduList = fits.open(self.test_files[0])
+
+  def tearDown(self):
+    self.hduList.close()
+
+  def test_no_metadata_keys(self):
+    "Extract no metadata if no metadata keys specified"
+    metadata = fm.extract_metadata(self.test_files[0], self.hduList, [])  # no desired keys
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), 0)
+    self.assertNotIn(fm.FILEPATH_KEY, metadata)
+
+  def test_filepath_key(self):
+    "Extract file path, if special FILEPATH_KEY is given"
+    metadata = fm.extract_metadata(self.test_files[0], self.hduList, [fm.FILEPATH_KEY])
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), 1)
+    self.assertIn(fm.FILEPATH_KEY, [md[0] for md in metadata])
+
+  def test_an_alternate_key(self):
+    "Extract metadata for the given alternate key"
+    metadata = fm.extract_metadata(self.test_files[0], self.hduList, ["obs_creator_name"])
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), 1)
+    self.assertIn("obs_creator_name", [md[0] for md in metadata])
+
+  def test_CRVAL_keys(self):
+    "Extract metadata for the given CRVAL* keys"
+    metadata = fm.extract_metadata(self.test_files[0], self.hduList, ["CRVAL1", "CRVAL2"])
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), 4)
+    mdkeys = [md[0] for md in metadata]
+    self.assertIn("declination", mdkeys)
+    self.assertIn("CRVAL1", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("CRVAL2", mdkeys)
+
+  def test_normal_key(self):
+    "Extract metadata key for the given normal key"
+    metadata = fm.extract_metadata(self.test_files[0], self.hduList, ["SIMPLE"])
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), 1)
+    self.assertIn("SIMPLE", [md[0] for md in metadata])
+
+
 class FitsMetadataTestCase(FitsMetaTestCase):
 
   def setUp(self):
@@ -99,10 +149,10 @@ class FitsMetadataTestCase(FitsMetaTestCase):
 
   def test_no_metadata_keys(self):
     "Extract no metadata if no metadata keys specified"
-    mdata = fm.fits_metadata(self.test_files[0], {"keyfile": "empty-metadata-keyfile.txt"})
-    self.assertNotEqual(mdata, None)
-    self.assertEqual(len(mdata), 0)
-    self.assertNotIn("filepath", mdata)
+    metadata = fm.fits_metadata(self.test_files[0], {"keyfile": "empty-metadata-keyfile.txt"})
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), 0)
+    self.assertNotIn(fm.FILEPATH_KEY, metadata)
 
   def test_metadata(self):
     "Extract metadata if default metadata keys specified"
@@ -112,7 +162,7 @@ class FitsMetadataTestCase(FitsMetaTestCase):
     self.assertEqual(len(metadata), 17)
 
     mdkeys = [md[0] for md in metadata]
-    self.assertIn("filepath", mdkeys)
+    self.assertIn(fm.FILEPATH_KEY, mdkeys)
     self.assertIn("right_ascension", mdkeys)
     self.assertIn("declination", mdkeys)
     self.assertIn("obs_title", mdkeys)
