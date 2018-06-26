@@ -1,7 +1,7 @@
 #
 # Module to manipulate file metadata.
-#   Written by: Tom Hicks. 5/9/2018.
-#   Last Modified: Add connect/disconnect actions.
+#   Written by: Tom Hicks. 6/22/2018.
+#   Last Modified: Rewrite for Uploader.
 #
 import os
 from irods.session import iRODSSession

@@ -1,10 +1,10 @@
 # #!/usr/bin/env python3
 #
-# Python code to (unit) test FITS metadata extractor module.
-#   Written by: Tom Hicks. 6/21/2018.
+# Python code to (unit) test the Astrolabe FITS Metadata module.
+#   Written by: Tom Hicks. 6/22/2018.
 #   Last Modified: Initial creation.
 #
-from dl import datalab as dl
+from astrolabe_data_stores import fits_meta
 import unittest
 
 def suite():
@@ -13,125 +13,125 @@ def suite():
   return suite
 
 
-class DataLabTestCase(unittest.TestCase):
+class IrodsTestCase(unittest.TestCase):
 
-  "Base DataLab class"
+  "Base Irods class"
   @classmethod
   def setUpClass(cls):
-    datalab = dl.DataLab()
+    datalab = irods.Irods()
     cls.dl = datalab
 
 
-class OptionTestCase(DataLabTestCase):
+class OptionTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.option = dl.Option(self.dl)
+    self.option = irods.Option(self.dl)
 
 
-class TaskTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.task = dl.Task(self.dl)
-
-
-class LoginTestCase(DataLabTestCase):
+class TaskTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.login = dl.Login(self.dl)
+    self.task = irods.Task(self.dl)
 
 
-class LogoutTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.logout = dl.Logout(self.dl)
-
-
-class AddCapabilityTestCase(DataLabTestCase):
+class LoginTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.addCapability = dl.AddCapability(self.dl)
+    self.login = irods.Login(self.dl)
 
 
-class ListCapabilityTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.listCapability = dl.ListCapability(self.dl)
-
-
-class QueryTestCase(DataLabTestCase):
+class LogoutTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.query = dl.Query(self.dl)
+    self.logout = irods.Logout(self.dl)
 
 
-class LaunchJobTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.launchjob = dl.LaunchJob(self.dl)
-
-
-class MountvofsTestCase(DataLabTestCase):
+class AddCapabilityTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.mountvofs = dl.Mountvofs(self.dl)
+    self.addCapability = irods.AddCapability(self.dl)
 
 
-class PutTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.put = dl.Put(self.dl)
-
-
-class GetTestCase(DataLabTestCase):
+class ListCapabilityTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.get = dl.Get(self.dl)
+    self.listCapability = irods.ListCapability(self.dl)
 
 
-class MoveTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.move = dl.Move(self.dl)
-
-
-class CopyTestCase(DataLabTestCase):
+class QueryTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.copy = dl.Copy(self.dl)
+    self.query = irods.Query(self.dl)
 
 
-class DeleteTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.delete = dl.Delete(self.dl)
-
-
-class LinkTestCase(DataLabTestCase):
+class LaunchJobTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.link = dl.Link(self.dl)
+    self.launchjob = irods.LaunchJob(self.dl)
 
 
-class ListTestCase(DataLabTestCase):
+class MountvofsTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.list = dl.List(self.dl)
+    self.mountvofs = irods.Mountvofs(self.dl)
+
+
+class PutTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.put = irods.Put(self.dl)
+
+
+class GetTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.get = irods.Get(self.dl)
+
+
+class MoveTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.move = irods.Move(self.dl)
+
+
+class CopyTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.copy = irods.Copy(self.dl)
+
+
+class DeleteTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.delete = irods.Delete(self.dl)
+
+
+class LinkTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.link = irods.Link(self.dl)
+
+
+class ListTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.list = irods.List(self.dl)
 
   def test_raw(self):
     "Test getting a listing in XML format"
@@ -155,32 +155,32 @@ class ListTestCase(DataLabTestCase):
     pass
 
 
-class TagTestCase(DataLabTestCase):
+class TagTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.tag = dl.Tag(self.dl)
+    self.tag = irods.Tag(self.dl)
 
 
-class MkDirTestCase(DataLabTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    self.mkdir = dl.MkDir(self.dl)
-
-
-class RmDirTestCase(DataLabTestCase):
+class MkDirTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.rmdir = dl.RmDir(self.dl)
+    self.mkdir = irods.MkDir(self.dl)
 
 
-class ResolveTestCase(DataLabTestCase):
+class RmDirTestCase(IrodsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.resolve = dl.Resolve(self.dl)
+    self.rmdir = irods.RmDir(self.dl)
+
+
+class ResolveTestCase(IrodsTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.resolve = irods.Resolve(self.dl)
 
 
 if __name__ == '__main__':
