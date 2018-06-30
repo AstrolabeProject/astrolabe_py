@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 #
-# Python code to (unit) test the Astrolabe FITS Metadata module.
+# Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 6/22/2018.
 #   Last Modified: Use test context module instead of installing module under test.
 #
-from astropy.io import fits
 import unittest
+from astropy.io import fits
 
-from context import fm
+from context import fm                      # the module under test
 
 def suite():
   suite = unittest.TestSuite()
