@@ -2,11 +2,12 @@
 #
 # Python code to (unit) test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Use FILEPATH_KEY. Add extract_metadata tests.
+#   Last Modified: Use test context module instead of installing module under test.
 #
 from astropy.io import fits
-import astrolabe_uploader.fits_meta as fm
 import unittest
+
+from context import fm
 
 def suite():
   suite = unittest.TestSuite()
