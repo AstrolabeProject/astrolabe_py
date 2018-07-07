@@ -1,20 +1,21 @@
 """
 Module to manipulate file metadata.
-  Last Modified: Fix instance variables. Use double quotes, module dunders. Mark statics. Remove unused methods.
+  Last Modified: Work out relationship of cwd and root vars.
 """
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __author__ = "Tom Hicks"
 
 import os
 import logging
+import pathlib as pl
 from irods.session import iRODSSession
 
-logging.basicConfig(level=logging.ERROR) # default logging configuration
+logging.basicConfig(level=logging.ERROR)    # default logging configuration
 
 class IrodsHelper:
     """ Helper class for iRods commands """
 
-    _CWD_FORMAT = "/{}/home/{}"
+    _CWD_FORMAT = "/{}/{}/{}"
 
     @staticmethod
     def make_session(**kwargs):
@@ -36,7 +37,8 @@ class IrodsHelper:
 
 
     def __init__(self):
-        self._cwd = None                    # current working directory
+        self._cwdpath = None                # current working directory path
+        self._root = None                   # root directory path
         self._session = None                # current session
 
     def __enter__(self):
@@ -65,10 +67,13 @@ class IrodsHelper:
                 env_file = os.path.expanduser("~/.irods/irods_environment.json")
 
             logging.info("IrodsHelper.connect: env_file={}".format(env_file))
+
             self._session = iRODSSession(irods_env_file=env_file)
             logging.info("IrodsHelper.connect: SESSION={}".format(self._session))
-            self.cd_home()
-            logging.info("IrodsHelper.connect: CWD={}".format(self._cwd))
+
+            self.set_root()
+            logging.info("IrodsHelper.connect:    ROOT={}".format(self._root))
+            logging.info("IrodsHelper.connect: CWDPATH={}".format(self._cwdpath))
 
     def is_connected(self):
         """ Tell whether this class is currently connected to iRods. """
@@ -76,28 +81,28 @@ class IrodsHelper:
 
     def cd_down(self, subdir):
         """ Change the current working directory to the given subdirectory. """
-        if (self._session):
-            pass                            # TODO: IMPLEMENT LATER
-        else:
-            self._cwd = None
+        if (self._cwdpath):
+            self._cwdpath = self._cwdpath / subdir
 
     def cd_home(self):
-        """ Reset the current working directory to the users home directory. """
-        if (self._session):
-            self._cwd = self._CWD_FORMAT.format(self._session.zone,self._session.username)
+        """ Reset the current working directory to the users top-level directory. """
+        if (self._root):
+            self._cwdpath = pl.PurePath(self._root)
         else:
-            self._cwd = None
+            self._cwdpath = None
 
     def cd_up(self):
         """ Change the current working directory to the parent directory. """
-        if (self._session):
-            pass                            # TODO: IMPLEMENT LATER
+        if (self._cwdpath and self._root):
+            parent = self._cwdpath.parent
+            if (parent >= self._root):      # must not rise above root dir
+                self._cwdpath = parent
         else:
-            self._cwd = None
+            self._cwdpath = None
 
     def cwd(self):
-        """ Return the current working directory. """
-        return self._cwd
+        """ Return the current working directory as a string. """
+        return str(self._cwdpath)
 
     def disconnect(self, options=None):
         """ Close down and cleanup the current session. """
@@ -105,6 +110,10 @@ class IrodsHelper:
         if (self._session):
             self._session.cleanup()
             self._session = None
+
+    def root(self):
+        """ Return the user root directory as a string. """
+        return str(self._root)
 
     def session(self):
         """ Return the current session object. """
@@ -119,4 +128,12 @@ class IrodsHelper:
             user=json_body["user"],
             password=json_body["password"],
             zone=json_body["zone"])
-        self.cd_home()
+        self.set_root()                     # call with empty options
+
+    def set_root(self, home_dir="home"):
+        """ Compute and set the root directory path to the users iRods home directory. """
+        if (self._session):
+            self._root = pl.PurePath(self._session.zone, home_dir, self._session.username)
+        else:
+            self._root = None
+        self.cd_home()                      # reset home after changing root dir
