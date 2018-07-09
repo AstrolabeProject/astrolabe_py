@@ -1,6 +1,6 @@
 """
 Module to manipulate file metadata.
-  Last Modified: Work out relationship of cwd and root vars.
+  Last Modified: Fix bad indent in connect. Add leading slash in set_root.
 """
 __version__ = "0.0.2"
 __author__ = "Tom Hicks"
@@ -66,14 +66,14 @@ class IrodsHelper:
             except KeyError:
                 env_file = os.path.expanduser("~/.irods/irods_environment.json")
 
-            logging.info("IrodsHelper.connect: env_file={}".format(env_file))
+        logging.info("IrodsHelper.connect: env_file={}".format(env_file))
 
-            self._session = iRODSSession(irods_env_file=env_file)
-            logging.info("IrodsHelper.connect: SESSION={}".format(self._session))
+        self._session = iRODSSession(irods_env_file=env_file)
+        logging.info("IrodsHelper.connect: SESSION={}".format(self._session))
 
-            self.set_root()
-            logging.info("IrodsHelper.connect:    ROOT={}".format(self._root))
-            logging.info("IrodsHelper.connect: CWDPATH={}".format(self._cwdpath))
+        self.set_root()
+        logging.info("IrodsHelper.connect:    ROOT={}".format(self._root))
+        logging.info("IrodsHelper.connect: CWDPATH={}".format(self._cwdpath))
 
     def is_connected(self):
         """ Tell whether this class is currently connected to iRods. """
@@ -130,10 +130,10 @@ class IrodsHelper:
             zone=json_body["zone"])
         self.set_root()                     # call with empty options
 
-    def set_root(self, home_dir="home"):
+    def set_root(self, home_dir="home", top_dir=""):
         """ Compute and set the root directory path to the users iRods home directory. """
         if (self._session):
-            self._root = pl.PurePath(self._session.zone, home_dir, self._session.username)
+            self._root = pl.PurePath("/", self._session.zone, home_dir, self._session.username, top_dir)
         else:
             self._root = None
         self.cd_home()                      # reset home after changing root dir
