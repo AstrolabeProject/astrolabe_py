@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Use test context module instead of installing module under test.
+#   Last Modified: Add some more ctype handler tests. Add more test doc strings. Consistent quotes.
 #
 import unittest
 from astropy.io import fits
@@ -61,16 +61,18 @@ class HandleCtypeMappingTestCase(FitsMetaTestCase):
     datafile.close()
 
   def test_nocrval(self):
+    "Handle missing or bad CRVAL key strings"
     metadata = []
     self.assertFalse(metadata)
-    fm.handle_ctype_mapping('', self.file_metadata, metadata)
-    fm.handle_ctype_mapping('BADKEY', self.file_metadata, metadata)
+    fm.handle_ctype_mapping("", self.file_metadata, metadata)
+    fm.handle_ctype_mapping("BADKEY", self.file_metadata, metadata)
     self.assertFalse(metadata)
 
   def test_crval1(self):
+    "Interpret CRVAL1 metadata item from real data"
     metadata = []
     self.assertFalse(metadata)
-    fm.handle_ctype_mapping('CRVAL1', self.file_metadata, metadata)
+    fm.handle_ctype_mapping("CRVAL1", self.file_metadata, metadata)
     self.assertTrue(metadata)
     self.assertEqual(len(metadata), 2)
     self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
@@ -78,14 +80,39 @@ class HandleCtypeMappingTestCase(FitsMetaTestCase):
     self.assertIn("right_ascension", [md[0] for md in metadata])
 
   def test_crval2(self):
+    "Interpret CRVAL2 metadata item from real data"
     metadata = []
     self.assertFalse(metadata)
-    fm.handle_ctype_mapping('CRVAL2', self.file_metadata, metadata)
+    fm.handle_ctype_mapping("CRVAL2", self.file_metadata, metadata)
     self.assertTrue(metadata)
     self.assertEqual(len(metadata), 2)
     self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
     self.assertNotIn("CRVAL1", [md[0] for md in metadata])
     self.assertIn("declination", [md[0] for md in metadata])
+
+  def test_swapped_crval1(self):
+    "Interpret CRVAL1 metadata item with swapped CTYPE value"
+    metadata = []
+    self.assertFalse(metadata)
+    self.file_metadata["CTYPE1"] = "DEC--TAN"    # alter incoming metadata
+    fm.handle_ctype_mapping("CRVAL1", self.file_metadata, metadata)
+    self.assertTrue(metadata)
+    self.assertEqual(len(metadata), 2)
+    self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
+    self.assertNotIn("CRVAL2", [md[0] for md in metadata])
+    self.assertIn("declination", [md[0] for md in metadata])
+
+  def test_swapped_crval2(self):
+    "Interpret CRVAL2 metadata item with swapped CTYPE value"
+    metadata = []
+    self.assertFalse(metadata)
+    self.file_metadata["CTYPE2"] = "RA--TAN"    # alter incoming metadata
+    fm.handle_ctype_mapping("CRVAL2", self.file_metadata, metadata)
+    self.assertTrue(metadata)
+    self.assertEqual(len(metadata), 2)
+    self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
+    self.assertNotIn("CRVAL1", [md[0] for md in metadata])
+    self.assertIn("right_ascension", [md[0] for md in metadata])
 
 
 class ExtractMetadataTestCase(FitsMetaTestCase):
@@ -170,6 +197,6 @@ class FitsMetadataTestCase(FitsMetaTestCase):
     self.assertIn("ORIGIN", mdkeys)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   suite = suite()
   unittest.TextTestRunner(verbosity=2).run(suite)
