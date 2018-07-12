@@ -1,5 +1,5 @@
 """
-Module to manipulate file metadata.
+Helper class for iRods commands: manipulate the filesystem, including metadata.
   Last Modified: Fix bad indent in connect. Add leading slash in set_root.
 """
 __version__ = "0.0.2"
