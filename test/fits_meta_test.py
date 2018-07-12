@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Initial creation.
+#   Last Modified: Add bad filename test. Update for accessor methods and metadata cleanup.
 #
 import unittest
 
@@ -33,17 +33,24 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     pass
 
 
+  def test_bad_ctor_filename(self):
+    "Throws exception on bad FITS filename"
+    with self.assertRaises(FileNotFoundError):
+      fm.FitsMeta("BAD_FILENAME")
+
   def test_fm_filename(self):
     "Get filename of test file"
-    self.assertEqual(self.fm.filename, self.test_files[0])
+    self.assertEqual(self.fm.filename(), self.test_files[0])
 
   def test_fm_len(self):
     "Get length of metadata from real data"
-    self.assertEqual(len(self.fm), 71)
+    self.assertEqual(len(self.fm), 54)
 
   def test_fm_metadata(self):
     "Get metadata from real data"
-    self.assertEqual(len(self.fm), 71)
+    md = self.fm.metadata()
+    self.assertNotEqual(md, None)
+    self.assertEqual(len(md), 54)
 
 
 if __name__ == "__main__":
