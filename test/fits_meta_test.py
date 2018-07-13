@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Add tests for default_cleaner_fn and JSON metadata. Update for renames to filepath.
+#   Last Modified: Add metadata_for_keys tests
 #
 import json
 import unittest
@@ -53,7 +53,6 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     md = self.fm.metadata()
     self.assertNotEqual(md, None)
     self.assertEqual(len(md), self.test_file_md_count)
-    # [print(item) for item in md]
 
   def test_key_set(self):
     "Get the set of metadata keywords (from real data)"
@@ -61,7 +60,6 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertNotEqual(keys, None)
     # HISTORY keyword is repeated in test file:
     self.assertEqual(len(keys), self.test_file_md_count - 1)
-    # [print(k) for k in keys]
 
   def test_contains(self):
     "Test membership in the set of metadata keywords (from real data)"
@@ -89,6 +87,43 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertEqual(len(json_data), self.test_file_md_count)
     self.assertTrue(all([type(j) == list for j in json_data]))
     self.assertTrue(all([len(j) == 2 for j in json_data]))
+
+  def test_metadata_for_keys_default(self):
+    "Get metadata for no keys specified: should get all keys (from real data)"
+    md4k = self.fm.metadata_for_keys()
+    self.assertNotEqual(md4k, None)
+    self.assertEqual(len(md4k), self.test_file_md_count)
+
+  def test_metadata_for_bad_keys(self):
+    "Get metadata for nonexistant keys: should get no keys (from real data)"
+    desired_keys = ["BADKEY", "NONE", "BOGUS"]
+    md4k = self.fm.metadata_for_keys(set(desired_keys))
+    self.assertNotEqual(md4k, None)
+    self.assertEqual(type(md4k), list)
+    self.assertEqual(len(md4k), 0)
+
+  def test_metadata_for_one_key(self):
+    "Get metadata for a single, unique key (from real data)"
+    desired_keys = ["DATE"]
+    md4k = self.fm.metadata_for_keys(set(desired_keys))
+    self.assertNotEqual(md4k, None)
+    self.assertEqual(type(md4k), list)
+    self.assertEqual(len(md4k), 1)
+
+  def test_metadata_for_keys(self):
+    "Get all metadata for just the given non-duplicated keys (from real data)"
+    desired_keys = ["NAXIS", "CRVAL2", "OBSERVAT"]
+    md4k = self.fm.metadata_for_keys(set(desired_keys))
+    self.assertNotEqual(md4k, None)
+    self.assertEqual(len(md4k), len(desired_keys))
+
+  def test_metadata_for_keys2(self):
+    "Get all metadata for the possibly duplicated keys (from real data)"
+    desired_keys = ["BITPIX", "CRVAL1", "HISTORY"]
+    md4k = self.fm.metadata_for_keys(set(desired_keys))
+    self.assertNotEqual(md4k, None)
+    # HISTORY keyword is repeated in test file:
+    self.assertEqual(len(md4k), 1+len(desired_keys))
 
   def test_default_cleaner(self):
     "The default cleaner function removes single quotes, double quotes, and backslashes"

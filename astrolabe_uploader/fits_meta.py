@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Add key & value cleaning, via cleaner function. Add JSON metadata fn. Renames to filepath.
+  Last Modified: Add metadata_for_keys method.
 """
 __version__ = "0.0.1"
 __author__ = "Tom Hicks"
@@ -66,6 +66,15 @@ class FitsMeta:
     def metadata(self):
       """ Return the metadata items. """
       return self._metadata
+
+    def metadata_for_keys(self, keys=None):
+        """ Return a list of metadata items with the specified keys or
+            all items, if no keys are specified.
+        """
+        ks = self._key_set
+        if (keys):
+            ks = set(keys)
+        return list(filter(lambda item: item.keyword in ks, self._metadata))
 
     def metadata_json(self):
       """ Return the metadata items as JSON. """
