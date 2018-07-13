@@ -1,11 +1,13 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Redo handle for ctype mapping. Consistent quotes.
+#   Last Modified: Redo/rename method to get HDU summary information.
 #
-import warnings
+import os
 import sys
+import warnings
 from astropy.io import fits
+import astrolabe_uploader.fits_meta as fm
 
 # dictionary of alternates for standard FITS metadata keys
 ALTERNATE_KEYS_MAP = {
@@ -55,18 +57,18 @@ def fits_metadata(file_path, options):
     return [mdata for mdata in metadata if mdata[1]]
 
 
-def fits_info(file_path, options=None):
-    "Print the Header Data Unit information for the given FITS file"
-    with fits.open(file_path) as hdus:
-        print(hdus.info())
-        for hdu in hdus:
-            hdu.verify("silentfix+ignore")
-            hdr = hdu.header
-            for key in hdr.keys():
-                val = str(hdr[key])
-                if (key and val):                   # ignore blank keys or values
-                    print(key + ": " + val)
-        print()
+def fits_hdu_info(file_path, options=None):
+    "Return a list of summary information strings for the HDUs of the given FITS file"
+    md = fm.FitsMeta(file_path)
+    hduinfo = md.hdu_info()
+    filename = os.path.basename(md.filepath())
+    # format the information into a report (a list of strings):
+    results = ['Filename: {}'.format(filename),
+               'No.    Name      Ver    Type      Cards   Dimensions   Format']
+    layout = '{:3d}  {:10}  {:3} {:11}  {:5d}   {}   {}   {}'
+    for hinfo in hduinfo:
+        results.append(layout.format(*hinfo))
+    return results
 
 
 def fits_verify(file_path, options=None):
