@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Add metadata_for_keys tests
+#   Last Modified: Add test for HDU summary info.
 #
 import json
 import unittest
@@ -47,6 +47,14 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
   def test_len(self):
     "Get length of metadata from real data"
     self.assertEqual(len(self.fm), self.test_file_md_count)
+
+  def test_info(self):
+    "Get HDUs infor from real data"
+    info = self.fm.info()
+    self.assertNotEqual(info, None)
+    self.assertEqual(len(info), 1)          # only one HDU
+    self.assertEqual(info[0][0], 0)         # first HDU is zero
+    self.assertTrue('PRIMARY' in info[0])   # and labeled as primary HDU
 
   def test_metadata(self):
     "Get metadata from real data"

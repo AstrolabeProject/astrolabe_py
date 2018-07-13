@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Make FILEPATH_KEY constant public.
+  Last Modified: Add method to get HDU summary info. Consistently format.
 """
 __version__ = "0.0.1"
 __author__ = "Tom Hicks"
@@ -34,6 +34,7 @@ class FitsMeta:
     def __init__(self, filepath, cleaner=default_cleaner_fn):
         self._filepath = filepath
         hdulist = fits.open(self._filepath) # raises error if unable to read file
+        self._hdusinfo = hdulist.info(False) # get summary info for all HDUs
         hdu0 = hdulist[0]                   # get first HDU
         hdu0.verify('silentfix+ignore')     # fix fixable items in the first HDU
         self._metadata = self._extract_metadata(hdu0.header, cleaner)
@@ -59,13 +60,17 @@ class FitsMeta:
         """ Return the filepath of the file used by this class. """
         return self._filepath
 
+    def info(self):
+        """ Return summary info for all HDUs in the input file. """
+        return self._hdusinfo
+
     def key_set(self):
-      """ Return the set of keywords for the metadata items. """
-      return self._key_set
+        """ Return the set of keywords for the metadata items. """
+        return self._key_set
 
     def metadata(self):
-      """ Return the metadata items. """
-      return self._metadata
+        """ Return the metadata items. """
+        return self._metadata
 
     def metadata_for_keys(self, keys=None):
         """ Return a list of metadata items with the specified keys or
@@ -77,8 +82,8 @@ class FitsMeta:
         return list(filter(lambda item: item.keyword in ks, self._metadata))
 
     def metadata_json(self):
-      """ Return the metadata items as JSON. """
-      return json.dumps(self._metadata)
+        """ Return the metadata items as JSON. """
+        return json.dumps(self._metadata)
 
 
     def _extract_metadata(self, header, cleaner):
