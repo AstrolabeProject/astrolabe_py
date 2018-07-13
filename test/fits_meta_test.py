@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Update test for rename of HDU summary info method.
+#   Last Modified: Begin class method tests with tests for filter_by_keys.
 #
 import json
 import unittest
@@ -12,6 +12,7 @@ from context import fm                      # the module under test
 def suite():
   suite = unittest.TestSuite()
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsMetaTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsMetaClassTestCase))
   return suite
 
 
@@ -139,6 +140,59 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     clean = [fm.default_cleaner_fn(v) for v in dirty]
     self.assertNotEqual(clean, None)
     self.assertTrue(all([v == "B M E" for v in clean]))
+
+
+class FitsMetaClassTestCase(FitsMetaBaseTestCase):
+
+  @classmethod
+  def setUpClass(cls):
+    cls.meta = [fm.Metadatum(k, v) for k, v in [("A", 1), ("BB", 2), ("CCC", 3), ("DDDD", 4)]]
+    cls.meta_count = len(cls.meta)
+
+  def setUp(self):
+    "Initialize the test case"
+    pass
+
+  def test_filter_by_keys_none(self):
+    "Filter metadata with empty key list should return empty list"
+    fbk = fm.FitsMeta.filter_by_keys(self.meta, [])
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), 0)
+
+  def test_filter_by_keys_bad(self):
+    "Filter metadata with bogus keys list should return empty list"
+    fbk = fm.FitsMeta.filter_by_keys(self.meta, ["XXX", "YYY", "ZZZ"])
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), 0)
+
+  def test_filter_by_keys_one(self):
+    "Filter metadata with single key list should return singleton list"
+    fbk = fm.FitsMeta.filter_by_keys(self.meta, ["CCC"])
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), 1)
+    self.assertEqual(fbk[0].keyword, "CCC")
+    self.assertEqual(fbk[0].value, 3)
+
+  def test_filter_by_keys_mult(self):
+    "Filter metadata with good keys list should return good list"
+    keys = ["A", "DDDD"]
+    fbk = fm.FitsMeta.filter_by_keys(self.meta, keys)
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), len(keys))
+    self.assertTrue(all([(item.keyword in keys) for item in fbk]))
+
+  def test_filter_by_keys_mixed(self):
+    "Filter metadata with mixed keys list should return good list"
+    keys = ["A", "AA", "DDDD", "D", "XXX"]
+    fbk = fm.FitsMeta.filter_by_keys(self.meta, keys)
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), 2)
+    self.assertTrue(all([(item.keyword in keys) for item in fbk]))
 
 
 if __name__ == "__main__":
