@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Add metadata_for_keys method.
+  Last Modified: Make FILEPATH_KEY constant public.
 """
 __version__ = "0.0.1"
 __author__ = "Tom Hicks"
@@ -29,7 +29,7 @@ def default_cleaner_fn(fld):
 class FitsMeta:
     """ Class to extract and format metadata from FITS files. """
 
-    _FILEPATH_KEY = "filepath"
+    FILEPATH_KEY = "filepath"
 
     def __init__(self, filepath, cleaner=default_cleaner_fn):
         self._filepath = filepath
@@ -37,7 +37,7 @@ class FitsMeta:
         hdu0 = hdulist[0]                   # get first HDU
         hdu0.verify('silentfix+ignore')     # fix fixable items in the first HDU
         self._metadata = self._extract_metadata(hdu0.header, cleaner)
-        self._metadata.append(Metadatum(self._FILEPATH_KEY, self._filepath))
+        self._metadata.append(Metadatum(self.FILEPATH_KEY, self._filepath))
         self._key_set = set([item.keyword for item in self._metadata])
         hdulist.close()                     # close the file
 
