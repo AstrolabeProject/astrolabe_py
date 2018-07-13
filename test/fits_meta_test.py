@@ -2,8 +2,9 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Add tests for __contains__, __iter__, and key_set methods.
+#   Last Modified: Add tests for default_cleaner_fn and JSON metadata. Update for renames to filepath.
 #
+import json
 import unittest
 
 from context import fm                      # the module under test
@@ -19,45 +20,47 @@ class FitsMetaBaseTestCase(unittest.TestCase):
   "Base test class"
   @classmethod
   def setUpClass(cls):
-    cls.test_files = [ "cvnidwabcut.fits" ]
+    cls.test_file = "cvnidwabcut.fits"
+    cls.test_file_md_count = 55
 
 
 class FitsMetaTestCase(FitsMetaBaseTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.fm = fm.FitsMeta(self.test_files[0])
+    self.fm = fm.FitsMeta(self.test_file)
 
   def tearDown(self):
     "Cleanup after the test case"
     pass
 
 
-  def test_bad_ctor_filename(self):
-    "Throws exception on bad FITS filename"
+  def test_bad_ctor_filepath(self):
+    "Throws exception on bad FITS filepath"
     with self.assertRaises(FileNotFoundError):
       fm.FitsMeta("BAD_FILENAME")
 
-  def test_filename(self):
-    "Get filename of test file"
-    self.assertEqual(self.fm.filename(), self.test_files[0])
+  def test_filepath(self):
+    "Get filepath of test file"
+    self.assertEqual(self.fm.filepath(), self.test_file)
 
   def test_len(self):
     "Get length of metadata from real data"
-    self.assertEqual(len(self.fm), 54)
+    self.assertEqual(len(self.fm), self.test_file_md_count)
 
   def test_metadata(self):
     "Get metadata from real data"
     md = self.fm.metadata()
     self.assertNotEqual(md, None)
-    self.assertEqual(len(md), 54)
+    self.assertEqual(len(md), self.test_file_md_count)
     # [print(item) for item in md]
 
   def test_key_set(self):
     "Get the set of metadata keywords (from real data)"
     keys = self.fm.key_set()
     self.assertNotEqual(keys, None)
-    self.assertEqual(len(keys), 53)         # HISTORY keyword is repeated in test file
+    # HISTORY keyword is repeated in test file:
+    self.assertEqual(len(keys), self.test_file_md_count - 1)
     # [print(k) for k in keys]
 
   def test_contains(self):
@@ -72,8 +75,27 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     "Get an iterator over the metadata class"
     md = [item for item in self.fm]
     self.assertNotEqual(md, None)
-    self.assertEqual(len(md), 54)
+    self.assertEqual(len(md), self.test_file_md_count)
     self.assertEqual(md, self.fm.metadata())
+
+  def test_metadata_json(self):
+    "Get metadata as JSON from real data"
+    jmd = self.fm.metadata_json()
+    self.assertNotEqual(jmd, None)
+    self.assertEqual(type(jmd), str)
+    json_data = json.loads(jmd)
+    self.assertEqual(type(json_data), list)
+    self.assertEqual(type(json_data), list)
+    self.assertEqual(len(json_data), self.test_file_md_count)
+    self.assertTrue(all([type(j) == list for j in json_data]))
+    self.assertTrue(all([len(j) == 2 for j in json_data]))
+
+  def test_default_cleaner(self):
+    "The default cleaner function removes single quotes, double quotes, and backslashes"
+    dirty = [ "\'B M\' E\'", "'B M' E'", '\"B M\" E\"', '"B M" E"', "\\B M\\ E\\", "\B M\ E\"" ]
+    clean = [fm.default_cleaner_fn(v) for v in dirty]
+    self.assertNotEqual(clean, None)
+    self.assertTrue(all([v == "B M E" for v in clean]))
 
 
 if __name__ == "__main__":
