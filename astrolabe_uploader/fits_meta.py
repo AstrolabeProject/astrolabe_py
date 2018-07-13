@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Rename method to get HDU summary info.
+  Last Modified: Add and use filter_by_fn and filter_by_keys class methods.
 """
 __version__ = "0.0.1"
 __author__ = "Tom Hicks"
@@ -30,6 +30,20 @@ class FitsMeta:
     """ Class to extract and format metadata from FITS files. """
 
     FILEPATH_KEY = "filepath"
+
+    @classmethod
+    def filter_by_fn(cls, metadata, filter_fn=None):
+        """ Return a list of Metadatum items passing the given filter function.
+            If filter function is not given, the identity function is assumed
+            and all elements of iterable that are false are removed.
+        """
+        return list(filter(filter_fn, metadata))
+
+    @classmethod
+    def filter_by_keys(cls, metadata, keys):
+        """ Return a list of Metadatum items whose keys are in the given iterable. """
+        return cls.filter_by_fn(metadata, lambda item: item.keyword in set(keys))
+
 
     def __init__(self, filepath, cleaner=default_cleaner_fn):
         self._filepath = filepath
@@ -79,7 +93,7 @@ class FitsMeta:
         ks = self._key_set
         if (keys):
             ks = set(keys)
-        return list(filter(lambda item: item.keyword in ks, self._metadata))
+        return self.filter_by_keys(self._metadata, ks)
 
     def metadata_json(self):
         """ Return the metadata items as JSON. """
