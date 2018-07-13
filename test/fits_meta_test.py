@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Add test for HDU summary info.
+#   Last Modified: Update test for rename of HDU summary info method.
 #
 import json
 import unittest
@@ -45,19 +45,19 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertEqual(self.fm.filepath(), self.test_file)
 
   def test_len(self):
-    "Get length of metadata from real data"
+    "Get length of metadata (from real data)"
     self.assertEqual(len(self.fm), self.test_file_md_count)
 
-  def test_info(self):
-    "Get HDUs infor from real data"
-    info = self.fm.info()
+  def test_hdu_info(self):
+    "Get HDUs summary info (from real data)"
+    info = self.fm.hdu_info()
     self.assertNotEqual(info, None)
     self.assertEqual(len(info), 1)          # only one HDU
     self.assertEqual(info[0][0], 0)         # first HDU is zero
     self.assertTrue('PRIMARY' in info[0])   # and labeled as primary HDU
 
   def test_metadata(self):
-    "Get metadata from real data"
+    "Get metadata (from real data)"
     md = self.fm.metadata()
     self.assertNotEqual(md, None)
     self.assertEqual(len(md), self.test_file_md_count)
@@ -85,7 +85,7 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertEqual(md, self.fm.metadata())
 
   def test_metadata_json(self):
-    "Get metadata as JSON from real data"
+    "Get metadata as JSON (from real data)"
     jmd = self.fm.metadata_json()
     self.assertNotEqual(jmd, None)
     self.assertEqual(type(jmd), str)

@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Add method to get HDU summary info. Consistently format.
+  Last Modified: Rename method to get HDU summary info.
 """
 __version__ = "0.0.1"
 __author__ = "Tom Hicks"
@@ -60,7 +60,7 @@ class FitsMeta:
         """ Return the filepath of the file used by this class. """
         return self._filepath
 
-    def info(self):
+    def hdu_info(self):
         """ Return summary info for all HDUs in the input file. """
         return self._hdusinfo
 
