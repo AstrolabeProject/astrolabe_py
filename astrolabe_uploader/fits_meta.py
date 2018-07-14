@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Add and use filter_by_fn and filter_by_keys class methods.
+  Last Modified: Rename vars in filter_by_fn for clarity.
 """
 __version__ = "0.0.1"
 __author__ = "Tom Hicks"
@@ -25,19 +25,18 @@ def default_cleaner_fn(fld):
     else:
         return fld
 
-
 class FitsMeta:
     """ Class to extract and format metadata from FITS files. """
 
     FILEPATH_KEY = "filepath"
 
     @classmethod
-    def filter_by_fn(cls, metadata, filter_fn=None):
-        """ Return a list of Metadatum items passing the given filter function.
-            If filter function is not given, the identity function is assumed
+    def filter_by_fn(cls, metadata, predicate=None):
+        """ Return a list of Metadatum items passing the given filter predicate.
+            If filter predicate is not given, the identity function is assumed
             and all elements of iterable that are false are removed.
         """
-        return list(filter(filter_fn, metadata))
+        return list(filter(predicate, metadata))
 
     @classmethod
     def filter_by_keys(cls, metadata, keys):
