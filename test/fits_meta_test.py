@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Continue class method tests with tests for filter_by_fn.
+#   Last Modified: Update for move of as_json and filter_by_* methods to module scope.
 #
 import json
 import unittest
@@ -98,9 +98,9 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertEqual(len(md), self.test_file_md_count)
     self.assertEqual(md, self.fm.metadata())
 
-  def test_metadata_json(self):
+  def test_metadata_as_json(self):
     "Get metadata as JSON (from real data)"
-    jmd = self.fm.metadata_json()
+    jmd = self.fm.metadata_as_json()
     self.assertNotEqual(jmd, None)
     self.assertEqual(type(jmd), str)
     json_data = json.loads(jmd)
@@ -172,21 +172,21 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_keys_none(self):
     "Filter metadata with empty key list should return empty list"
-    fbk = fm.FitsMeta.filter_by_keys(self.meta, [])
+    fbk = fm.filter_by_keys(self.meta, [])
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 0)
 
   def test_filter_by_keys_bad(self):
     "Filter metadata with bogus keys list should return empty list"
-    fbk = fm.FitsMeta.filter_by_keys(self.meta, ["XXX", "YYY", "ZZZ"])
+    fbk = fm.filter_by_keys(self.meta, ["XXX", "YYY", "ZZZ"])
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 0)
 
   def test_filter_by_keys_one(self):
     "Filter metadata with single key list should return singleton list"
-    fbk = fm.FitsMeta.filter_by_keys(self.meta, ["CCC"])
+    fbk = fm.filter_by_keys(self.meta, ["CCC"])
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 1)
@@ -196,7 +196,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
   def test_filter_by_keys_mult(self):
     "Filter metadata with good keys list should return good list"
     keys = ["A", "DDDD"]
-    fbk = fm.FitsMeta.filter_by_keys(self.meta, keys)
+    fbk = fm.filter_by_keys(self.meta, keys)
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), len(keys))
@@ -205,7 +205,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
   def test_filter_by_keys_mixed(self):
     "Filter metadata with mixed keys list should return good list"
     keys = ["A", "AA", "DDDD", "D", "XXX"]
-    fbk = fm.FitsMeta.filter_by_keys(self.meta, keys)
+    fbk = fm.filter_by_keys(self.meta, keys)
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 2)
@@ -213,7 +213,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_fn_no_fn(self):
     "Filter metadata with no function should return list unchanged"
-    fbf = fm.FitsMeta.filter_by_fn(self.meta)
+    fbf = fm.filter_by_fn(self.meta)
     self.assertNotEqual(fbf, None)
     self.assertEqual(type(fbf), list)
     self.assertEqual(len(fbf), self.meta_count)
@@ -221,7 +221,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_fn_none(self):
     "Filter metadata with None function should return list unchanged"
-    fbf = fm.FitsMeta.filter_by_fn(self.meta, None)
+    fbf = fm.filter_by_fn(self.meta, None)
     self.assertNotEqual(fbf, None)
     self.assertEqual(type(fbf), list)
     self.assertEqual(len(fbf), self.meta_count)
@@ -229,7 +229,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_fn_ident(self):
     "Filter metadata with ident function should return list unchanged"
-    fbf = fm.FitsMeta.filter_by_fn(self.meta, predicate=ident_fn)
+    fbf = fm.filter_by_fn(self.meta, predicate=ident_fn)
     self.assertNotEqual(fbf, None)
     self.assertEqual(type(fbf), list)
     self.assertEqual(len(fbf), self.meta_count)
@@ -237,7 +237,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_fn_mixed(self):
     "Filter mixed data with ident function should filter out non-truthy items"
-    fbf = fm.FitsMeta.filter_by_fn(self.mixed, predicate=ident_fn)
+    fbf = fm.filter_by_fn(self.mixed, predicate=ident_fn)
     self.assertNotEqual(fbf, None)
     self.assertEqual(type(fbf), list)
     self.assertEqual(len(fbf), self.mixed_true_count)
@@ -245,7 +245,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_fn_b(self):
     "Filter metadata with B-prefix function should filter list"
-    fbf = fm.FitsMeta.filter_by_fn(self.meta, predicate=b_fn)
+    fbf = fm.filter_by_fn(self.meta, predicate=b_fn)
     self.assertNotEqual(fbf, None)
     self.assertEqual(type(fbf), list)
     self.assertEqual(len(fbf), 2)
@@ -253,7 +253,7 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_fn_hival(self):
     "Filter metadata with hival function should filter list"
-    fbf = fm.FitsMeta.filter_by_fn(self.meta, predicate=hival_fn)
+    fbf = fm.filter_by_fn(self.meta, predicate=hival_fn)
     self.assertNotEqual(fbf, None)
     self.assertEqual(type(fbf), list)
     self.assertEqual(len(fbf), 2)

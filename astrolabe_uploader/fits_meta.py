@@ -1,8 +1,8 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Rename vars in filter_by_fn for clarity.
+  Last Modified: Move as_json and filter_by_* methods to module scope.
 """
-__version__ = "0.0.1"
+__version__ = "0.0.4"
 __author__ = "Tom Hicks"
 
 import collections
@@ -14,35 +14,40 @@ from astropy.io import fits
 
 logging.basicConfig(level=logging.ERROR)    # default logging configuration
 
+# class to hold an individual metadatum, a list of which is the metadata
 Metadatum = collections.namedtuple('Metadatum', ['keyword', 'value'])
 
-CLEANER_RE = "[\"\'\\\\]"                   # chars to remove from keys and values
+def as_json(metadata):
+    """ Format and return the given metadata as a JSON string. """
+    return json.dumps(metadata)
 
 def default_cleaner_fn(fld):
     """ Return a copy of the given field cleaned up by removing any unwanted characters. """
     if (isinstance(fld, str)):
-        return re.sub(CLEANER_RE, "", fld)
+        return re.sub("[\"\'\\\\]", "", fld) # remove quotes and backslashes
     else:
         return fld
+
+def filter_by_fn(metadata, predicate=None):
+    """ Return a list of Metadatum items passing the given filter predicate.
+        If filter predicate is not given, the identity function is assumed
+        and all elements of iterable that are false are removed.
+    """
+    return list(filter(predicate, metadata))
+
+def filter_by_keys(metadata, keys):
+    """ Return a list of Metadatum items whose keys are in the given metadata. """
+    return filter_by_fn(metadata, lambda item: item.keyword in set(keys))
+
+def key_set(metadata):
+    """ Return a list of the keys for the given metadata. """
+    return set([item.keyword for item in metadata])
+
 
 class FitsMeta:
     """ Class to extract and format metadata from FITS files. """
 
     FILEPATH_KEY = "filepath"
-
-    @classmethod
-    def filter_by_fn(cls, metadata, predicate=None):
-        """ Return a list of Metadatum items passing the given filter predicate.
-            If filter predicate is not given, the identity function is assumed
-            and all elements of iterable that are false are removed.
-        """
-        return list(filter(predicate, metadata))
-
-    @classmethod
-    def filter_by_keys(cls, metadata, keys):
-        """ Return a list of Metadatum items whose keys are in the given iterable. """
-        return cls.filter_by_fn(metadata, lambda item: item.keyword in set(keys))
-
 
     def __init__(self, filepath, cleaner=default_cleaner_fn):
         self._filepath = filepath
@@ -52,7 +57,7 @@ class FitsMeta:
         hdu0.verify('silentfix+ignore')     # fix fixable items in the first HDU
         self._metadata = self._extract_metadata(hdu0.header, cleaner)
         self._metadata.append(Metadatum(self.FILEPATH_KEY, self._filepath))
-        self._key_set = set([item.keyword for item in self._metadata])
+        self._key_set = key_set(self._metadata)
         hdulist.close()                     # close the file
 
     def __enter__(self):
@@ -92,11 +97,11 @@ class FitsMeta:
         ks = self._key_set
         if (keys):
             ks = set(keys)
-        return self.filter_by_keys(self._metadata, ks)
+        return filter_by_keys(self._metadata, ks)
 
-    def metadata_json(self):
+    def metadata_as_json(self):
         """ Return the metadata items as JSON. """
-        return json.dumps(self._metadata)
+        return as_json(self._metadata)
 
 
     def _extract_metadata(self, header, cleaner):
