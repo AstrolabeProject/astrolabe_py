@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Update for move of as_json and filter_by_* methods to module scope.
+#   Last Modified: Update for reversion of methods to stateful paradigm.
 #
 import json
 import unittest
@@ -12,22 +12,7 @@ from context import fm                      # the module under test
 def suite():
   suite = unittest.TestSuite()
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsMetaTestCase))
-  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsMetaClassTestCase))
   return suite
-
-# Some test functions to pass to a filter function:
-def ident_fn(item):
-  if (item):
-    return True
-  else:
-    return False
-
-def b_fn(item):
-  return item.keyword.startswith("B")
-
-def hival_fn(item):
-  return item.value > 100
-
 
 class FitsMetaBaseTestCase(unittest.TestCase):
 
@@ -147,56 +132,33 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     # HISTORY keyword is repeated in test file:
     self.assertEqual(len(md4k), 1+len(desired_keys))
 
-  def test_default_cleaner(self):
-    "The default cleaner function removes single quotes, double quotes, and backslashes"
-    dirty = [ "\'B M\' E\'", "'B M' E'", '\"B M\" E\"', '"B M" E"', "\\B M\\ E\\", "\B M\ E\"" ]
-    clean = [fm.default_cleaner_fn(v) for v in dirty]
-    self.assertNotEqual(clean, None)
-    self.assertTrue(all([v == "B M E" for v in clean]))
-
-
-class FitsMetaClassTestCase(FitsMetaBaseTestCase):
-
-  @classmethod
-  def setUpClass(cls):
-    cls.meta = [fm.Metadatum(k, v) for k, v in
-                [("A", 1), ("B", 1), ("BB", 22), ("CCC", 333), ("DDDD", 4444)]]
-    cls.meta_count = len(cls.meta)
-    cls.mixed = [ "A", 1, None, "BB", 2, 3.4, True, False, "" ]
-    cls.mixed_true_count = 6
-
-
-  def setUp(self):
-    "Initialize the test case"
-    pass
-
   def test_filter_by_keys_none(self):
     "Filter metadata with empty key list should return empty list"
-    fbk = fm.filter_by_keys(self.meta, [])
+    fbk = self.fm.filter_by_keys([])
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 0)
 
   def test_filter_by_keys_bad(self):
     "Filter metadata with bogus keys list should return empty list"
-    fbk = fm.filter_by_keys(self.meta, ["XXX", "YYY", "ZZZ"])
+    fbk = self.fm.filter_by_keys(["XXX", "YYY", "ZZZ"])
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 0)
 
   def test_filter_by_keys_one(self):
     "Filter metadata with single key list should return singleton list"
-    fbk = fm.filter_by_keys(self.meta, ["CCC"])
+    fbk = self.fm.filter_by_keys(["NAXIS"])
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 1)
-    self.assertEqual(fbk[0].keyword, "CCC")
-    self.assertEqual(fbk[0].value, 333)
+    self.assertTrue("NAXIS" in fbk[0].keyword)
+    self.assertTrue(fbk[0].value, 941)
 
   def test_filter_by_keys_mult(self):
     "Filter metadata with good keys list should return good list"
-    keys = ["A", "DDDD"]
-    fbk = fm.filter_by_keys(self.meta, keys)
+    keys = ["BITPIX", "DATE"]
+    fbk = self.fm.filter_by_keys(keys)
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), len(keys))
@@ -204,60 +166,19 @@ class FitsMetaClassTestCase(FitsMetaBaseTestCase):
 
   def test_filter_by_keys_mixed(self):
     "Filter metadata with mixed keys list should return good list"
-    keys = ["A", "AA", "DDDD", "D", "XXX"]
-    fbk = fm.filter_by_keys(self.meta, keys)
+    keys = ["BITPIX", "NAXIS", "BOGUSKEY", "NAXIS2", "DATE", "badkey"]
+    fbk = self.fm.filter_by_keys(keys)
     self.assertNotEqual(fbk, None)
     self.assertEqual(type(fbk), list)
-    self.assertEqual(len(fbk), 2)
+    self.assertEqual(len(fbk), 4)
     self.assertTrue(all([(item.keyword in keys) for item in fbk]))
 
-  def test_filter_by_fn_no_fn(self):
-    "Filter metadata with no function should return list unchanged"
-    fbf = fm.filter_by_fn(self.meta)
-    self.assertNotEqual(fbf, None)
-    self.assertEqual(type(fbf), list)
-    self.assertEqual(len(fbf), self.meta_count)
-    self.assertEqual(fbf, self.meta)
-
-  def test_filter_by_fn_none(self):
-    "Filter metadata with None function should return list unchanged"
-    fbf = fm.filter_by_fn(self.meta, None)
-    self.assertNotEqual(fbf, None)
-    self.assertEqual(type(fbf), list)
-    self.assertEqual(len(fbf), self.meta_count)
-    self.assertEqual(fbf, self.meta)
-
-  def test_filter_by_fn_ident(self):
-    "Filter metadata with ident function should return list unchanged"
-    fbf = fm.filter_by_fn(self.meta, predicate=ident_fn)
-    self.assertNotEqual(fbf, None)
-    self.assertEqual(type(fbf), list)
-    self.assertEqual(len(fbf), self.meta_count)
-    self.assertEqual(fbf, self.meta)
-
-  def test_filter_by_fn_mixed(self):
-    "Filter mixed data with ident function should filter out non-truthy items"
-    fbf = fm.filter_by_fn(self.mixed, predicate=ident_fn)
-    self.assertNotEqual(fbf, None)
-    self.assertEqual(type(fbf), list)
-    self.assertEqual(len(fbf), self.mixed_true_count)
-    self.assertEqual(fbf, [ "A", 1, "BB", 2, 3.4, True])
-
-  def test_filter_by_fn_b(self):
-    "Filter metadata with B-prefix function should filter list"
-    fbf = fm.filter_by_fn(self.meta, predicate=b_fn)
-    self.assertNotEqual(fbf, None)
-    self.assertEqual(type(fbf), list)
-    self.assertEqual(len(fbf), 2)
-    self.assertEqual(fbf, [ ("B", 1), ("BB", 22) ])
-
-  def test_filter_by_fn_hival(self):
-    "Filter metadata with hival function should filter list"
-    fbf = fm.filter_by_fn(self.meta, predicate=hival_fn)
-    self.assertNotEqual(fbf, None)
-    self.assertEqual(type(fbf), list)
-    self.assertEqual(len(fbf), 2)
-    self.assertEqual(fbf, [ ("CCC", 333), ("DDDD", 4444) ])
+  def test_default_cleaner(self):
+    "The default cleaner function removes single quotes, double quotes, and backslashes"
+    dirty = [ "\'B M\' E\'", "'B M' E'", '\"B M\" E\"', '"B M" E"', "\\B M\\ E\\", "\B M\ E\"" ]
+    clean = [fm.default_cleaner_fn(v) for v in dirty]
+    self.assertNotEqual(clean, None)
+    self.assertTrue(all([v == "B M E" for v in clean]))
 
 
 if __name__ == "__main__":
