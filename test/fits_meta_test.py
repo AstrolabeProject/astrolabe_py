@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Update for reversion of methods to stateful paradigm.
+#   Last Modified: Add tests for get and __getitem__.
 #
 import json
 import unittest
@@ -95,6 +95,7 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertTrue(all([type(j) == list for j in json_data]))
     self.assertTrue(all([len(j) == 2 for j in json_data]))
 
+
   def test_metadata_for_keys_default(self):
     "Get metadata for no keys specified: should get all keys (from real data)"
     md4k = self.fm.metadata_for_keys()
@@ -131,6 +132,7 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertNotEqual(md4k, None)
     # HISTORY keyword is repeated in test file:
     self.assertEqual(len(md4k), 1+len(desired_keys))
+
 
   def test_filter_by_keys_none(self):
     "Filter metadata with empty key list should return empty list"
@@ -173,12 +175,75 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertEqual(len(fbk), 4)
     self.assertTrue(all([(item.keyword in keys) for item in fbk]))
 
+
   def test_default_cleaner(self):
     "The default cleaner function removes single quotes, double quotes, and backslashes"
     dirty = [ "\'B M\' E\'", "'B M' E'", '\"B M\" E\"', '"B M" E"', "\\B M\\ E\\", "\B M\ E\"" ]
     clean = [fm.default_cleaner_fn(v) for v in dirty]
     self.assertNotEqual(clean, None)
     self.assertTrue(all([v == "B M E" for v in clean]))
+
+
+  def test_get_missing_key(self):
+    "Throws exception on missing key"
+    with self.assertRaises(TypeError):
+      self.fm.get()
+
+  def test_get_none(self):
+    "Throws exception on None key"
+    with self.assertRaises(TypeError):
+      self.fm.get(None)
+
+  def test_get_non_string(self):
+    "Throws exception on non-string key"
+    with self.assertRaises(TypeError):
+      self.fm.get(88)
+
+  def test_get_not_found_default(self):
+    "Returns default of None on key not found"
+    item = self.fm.get("NO_SUCH_KEY")
+    self.assertEqual(item, None)
+
+  def test_get_not_found_given(self):
+    "Returns given value on key not found"
+    item = self.fm.get("NO_SUCH_KEY", "HAPPY")
+    self.assertNotEqual(item, None)
+    self.assertEqual(item, "HAPPY")
+    item = self.fm.get("NO_SUCH_KEY", 88)
+    self.assertNotEqual(item, None)
+    self.assertEqual(item, 88)
+
+  def test_get_good(self):
+    "Finds item for valid key"
+    item = self.fm.get("NAXIS")
+    self.assertNotEqual(item, None)
+    self.assertEqual(type(item), fm.Metadatum)
+    self.assertEqual(item.keyword, "NAXIS")
+    self.assertEqual(item.value, 2)
+
+
+  def test_getitem_none(self):
+    "Throws exception on None key"
+    with self.assertRaises(TypeError):
+      self.fm[None]
+
+  def test_getitem_non_string(self):
+    "Throws exception on non-string key"
+    with self.assertRaises(TypeError):
+      self.fm[77]
+
+  def test_getitem_not_found(self):
+    "Throws exception on not found key"
+    with self.assertRaises(KeyError):
+      self.fm["NO_SUCH_KEY"]
+
+  def test_getitem_good(self):
+    "Finds item for valid key subscript"
+    item = self.fm["NAXIS"]
+    self.assertNotEqual(item, None)
+    self.assertEqual(type(item), fm.Metadatum)
+    self.assertEqual(item.keyword, "NAXIS")
+    self.assertEqual(item.value, 2)
 
 
 if __name__ == "__main__":
