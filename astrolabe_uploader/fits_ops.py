@@ -1,13 +1,15 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Redo/rename method to get HDU summary information.
+#   Last Modified: WIP but update for reversion of methods to stateful paradigm.
 #
 import os
 import sys
 import warnings
 from astropy.io import fits
-import astrolabe_uploader.fits_meta as fm
+from astrolabe_uploader.fits_meta import FitsMeta
+
+# **** TODO LATER: make all these var non-public ***
 
 # dictionary of alternates for standard FITS metadata keys
 ALTERNATE_KEYS_MAP = {
@@ -25,43 +27,30 @@ ALTERNATE_KEYS = set(ALTERNATE_KEYS_MAP.keys())
 CRVALS = { "CRVAL1": "CTYPE1", "CRVAL2": "CTYPE2" }
 CRVAL_KEYS = set(CRVALS.keys())
 
-FILEPATH_KEY = "filepath"
+FILEPATH_KEY = "filepath"                   # TODO LATER: read from fits_meta
 
-def extract_metadata(file_path, hdu, desired_keys):
-    """Extract the metadata from the HeaderDataUnit of the given file for the keys
-       in the given list of sought keys. Return a list of metadata key/value tuples."""
-    file_metadata = hdu[0].header
-    metadata = []                                   # return list of metadata key/value tuples
-    for key in desired_keys:
-        try:
-            if (key == FILEPATH_KEY):                       # special case: include file path
-                metadata.append( (FILEPATH_KEY, str(file_path)) )
-            elif (key in ALTERNATE_KEYS):                   # is this an alternate key?
-                standard_key = ALTERNATE_KEYS_MAP[key]      # get more standard key
-                metadata.append( (key, file_metadata.get(standard_key)) )
-            elif (key in CRVAL_KEYS):
-                handle_ctype_mapping(key, file_metadata, metadata)
-            else:                                           # just lookup the given key
-                metadata.append( (key, file_metadata.get(key)) )
-        except KeyError:
-            metadata.append( (key, "") )
+def fits_metadata(file_path, options):
+    "Return a list Metadatum tuples extracted from the given FITS file"
+    desired_keys = get_metadata_keys(options)
+    fm = FitsMeta(file_path)
+    metadata = post_process_metadata(fm, desired_keys)
     return metadata
 
 
-def fits_metadata(file_path, options):
-    "Return a list of key/value metadata tuples (strings) extracted from the given FITS file"
-    desired_keys = get_metadata_keys(options)
-    with fits.open(file_path) as hdu:
-        metadata = extract_metadata(file_path, hdu, desired_keys)
-    # filter out any metadata key/value pairs without values
-    return [mdata for mdata in metadata if mdata[1]]
+# def fits_metadataX(file_path, options):
+#     "Return a list of key/value metadata tuples (strings) extracted from the given FITS file"
+#     desired_keys = get_metadata_keys(options)
+#     with fits.open(file_path) as hdu:
+#         metadata = extract_metadata(file_path, hdu, desired_keys)
+#     # filter out any metadata key/value pairs without values
+#     return [mdata for mdata in metadata if mdata[1]]
 
 
 def fits_hdu_info(file_path, options=None):
     "Return a list of summary information strings for the HDUs of the given FITS file"
-    md = fm.FitsMeta(file_path)
-    hduinfo = md.hdu_info()
-    filename = os.path.basename(md.filepath())
+    fm = FitsMeta(file_path)
+    hduinfo = fm.hdu_info()
+    filename = os.path.basename(fm.filepath())
     # format the information into a report (a list of strings):
     results = ['Filename: {}'.format(filename),
                'No.    Name      Ver    Type      Cards   Dimensions   Format']
@@ -107,3 +96,29 @@ def handle_ctype_mapping(key, file_metadata, metadata):
             metadata.append( ("declination", file_metadata.get(key)) )
         else:                               # we only handle these interpretations, so far
             pass
+
+def post_process_metadata(fm, desired_keys):
+    # TODO: copy keys for aliases and ctype handling
+    # TODO: ???
+    return fm.filter_by_keys(desired_keys)
+
+
+def extract_metadata(file_path, hdu, desired_keys):
+    """Extract the metadata from the HeaderDataUnit of the given file for the keys
+       in the given list of sought keys. Return a list of metadata key/value tuples."""
+    file_metadata = hdu[0].header
+    metadata = []                                   # return list of metadata key/value tuples
+    for key in desired_keys:
+        try:
+            if (key == FILEPATH_KEY):                       # special case: include file path
+                metadata.append( (FILEPATH_KEY, str(file_path)) )
+            elif (key in ALTERNATE_KEYS):                   # is this an alternate key?
+                standard_key = ALTERNATE_KEYS_MAP[key]      # get more standard key
+                metadata.append( (key, file_metadata.get(standard_key)) )
+            elif (key in CRVAL_KEYS):
+                handle_ctype_mapping(key, file_metadata, metadata)
+            else:                                           # just lookup the given key
+                metadata.append( (key, file_metadata.get(key)) )
+        except KeyError:
+            metadata.append( (key, "") )
+    return metadata
