@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Add tests for get and __getitem__.
+#   Last Modified: Add tests for returned copies, copy_item, and _update_key_set.
 #
 import json
 import unittest
@@ -60,6 +60,16 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     md = self.fm.metadata()
     self.assertNotEqual(md, None)
     self.assertEqual(len(md), self.test_file_md_count)
+
+  def test_metadata_copied(self):
+    "Metadata should be copied externally (from real data)"
+    md0 = self.fm.metadata()                # get current metadata
+    md0_len = len(md0)                      # and its length
+    md1 = self.fm.metadata()                # get another copy
+    md1_len = len(md1)
+    self.assertFalse(md0 is md1)            # not the same list
+    self.assertEqual(md0_len, md1_len)      # metadata unchanged
+    self.assertEqual(md0, md1)              # metadata unchanged
 
   def test_key_set(self):
     "Get the set of metadata keywords (from real data)"
@@ -244,6 +254,75 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertEqual(type(item), fm.Metadatum)
     self.assertEqual(item.keyword, "NAXIS")
     self.assertEqual(item.value, 2)
+
+
+  def test_copy_item_not_found(self):
+    "Should fail to copy item for non-existant source key"
+    md0 = self.fm.metadata()                # get current metadata
+    md0_len = len(self.fm)                  # and its length
+    result = self.fm.copy_item("NO_SUCH_KEY", "TARGET")
+    self.assertFalse(result)                # reports the key was not copied
+    md1 = self.fm.metadata()
+    md1_len = len(self.fm)
+    self.assertEqual(md0_len, md1_len)      # metadata unchanged
+    self.assertEqual(md0, md1)              # metadata unchanged
+
+  def test_copy_item_newname(self):
+    "Should copy item for source key to brand new name"
+    md0 = self.fm.metadata()                # get current metadata
+    md0_len = len(self.fm)                  # and its length
+    result = self.fm.copy_item("NAXIS", "XXXXX")
+    self.assertTrue(result)                 # reports the key was copied
+    md1 = self.fm.metadata()
+    md1_len = len(self.fm)
+    self.assertNotEqual(md0_len, md1_len)   # metadata should be changed
+    self.assertNotEqual(md0, md1)           # metadata should be changed
+
+  def test_copy_item_dupok(self):
+    "Should copy item for source key and create a duplicate name"
+    md0 = self.fm.metadata()                # get current metadata
+    md0_len = len(self.fm)                  # and its length
+    result = self.fm.copy_item("NAXIS2", "HISTORY") # HISTORY already a key
+    self.assertTrue(result)                 # reports the key was copied
+    md1 = self.fm.metadata()
+    md1_len = len(self.fm)
+    self.assertNotEqual(md0_len, md1_len)   # metadata should be changed
+    self.assertNotEqual(md0, md1)           # metadata should be changed
+
+  def test_copy_item_dupself(self):
+    "Should copy item for source key and duplicate the source item"
+    md0 = self.fm.metadata()                # get current metadata
+    md0_len = len(self.fm)                  # and its length
+    result = self.fm.copy_item("HISTORY", "HISTORY") # unintended legal consequence
+    self.assertTrue(result)                 # reports the key was copied
+    md1 = self.fm.metadata()
+    md1_len = len(self.fm)
+    self.assertNotEqual(md0_len, md1_len)   # metadata should be changed
+    self.assertNotEqual(md0, md1)           # metadata should be changed
+
+  def test_copy_item_nodup(self):
+    "Should copy item for source key but not create a duplicate name"
+    md0 = self.fm.metadata()                # get current metadata
+    md0_len = len(self.fm)                  # and its length
+    result = self.fm.copy_item("NAXIS2", "HISTORY", nodup=True) # HISTORY already a key
+    self.assertFalse(result)                # reports the key was not copied
+    md1 = self.fm.metadata()
+    md1_len = len(self.fm)
+    self.assertEqual(md0_len, md1_len)      # metadata unchanged
+    self.assertEqual(md0, md1)              # metadata unchanged
+
+  def test_update_key_set(self):
+    "Key set should be updated after copy item"
+    ks0 = self.fm.key_set()                 # get current key set
+    result = self.fm.copy_item("NAXIS", "XXXXX")
+    self.assertTrue(result)                 # reports the key was copied
+    result = self.fm.copy_item("NAXIS", "YYYYY")
+    self.assertTrue(result)                 # reports the key was copied
+    ks1 = self.fm.key_set()                 # get key set again
+    self.assertTrue(len(ks1) > len(ks0))    # key set should be changed
+    self.assertNotEqual(ks0, ks1)           # key set should be changed
+    self.assertTrue("XXXXX" in ks1)         # new item should be in key set
+    self.assertTrue("YYYYY" in ks1)         # new item should be in key set
 
 
 if __name__ == "__main__":
