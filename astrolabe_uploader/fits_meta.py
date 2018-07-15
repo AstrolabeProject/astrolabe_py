@@ -1,11 +1,12 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Revert methods to stateful paradigm. Add copy-item, get, and update_key_set methods.
+  Last Modified: Fix bugs as result of testing. Return copies of stateful objects.
 """
 __version__ = "0.0.5"
 __author__ = "Tom Hicks"
 
 import collections
+import copy
 import json
 import logging
 import re
@@ -47,15 +48,15 @@ class FitsMeta:
     def __contains__(self, keyword):
         return keyword in self._key_set
 
-    def __getitem_(self, keyword):
+    def __getitem__(self, keyword):
         item = self.get(keyword)
         if (item):
             return item
         raise KeyError("Key '{}' not found in this metadata".format(keyword))
 
     def __iter__(self):
-        for md in self._metadata:
-            yield md
+        for item in self._metadata:
+            yield item
 
     def __len__(self):
         return len(self._metadata)
@@ -71,7 +72,7 @@ class FitsMeta:
         copied = False
         src_entry = self.get(src_key)
         if (src_entry):
-            if ((target_key not in metadata) or (not nodup)): # if no target or duplicates allowed
+            if ((target_key not in self._key_set) or (not nodup)):  # if no target or dups allowed
                 copy = src_entry._replace(keyword=target_key, value=src_entry.value)
                 self._metadata.append(copy)
                 self._update_key_set()
@@ -96,7 +97,7 @@ class FitsMeta:
             for item in self._metadata:
                 if (item.keyword == keyword):
                     return item
-        return default
+        return not_found
 
     def hdu_info(self):
         """ Return summary info for all HDUs in the input file. """
@@ -104,11 +105,11 @@ class FitsMeta:
 
     def key_set(self):
         """ Return the set of keywords for the metadata items. """
-        return self._key_set
+        return copy.copy(self._key_set)
 
     def metadata(self):
         """ Return the metadata items. """
-        return self._metadata
+        return copy.copy(self._metadata)
 
     def metadata_for_keys(self, keys=None):
         """ Return a list of metadata items with the specified keys or
