@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: WIP: begin rewrite for rewritten fits_ops module.
+#   Last Modified: Add tests for metadata with keys_subset.
 #
 import unittest
 from astropy.io import fits
@@ -15,7 +15,7 @@ def suite():
   suite = unittest.TestSuite()
 #  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(HandleCtypeMappingTestCase))
 #  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ExtractMetadataTestCase))
-  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsOpsdataTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsMetadataTestCase))
   return suite
 
 
@@ -141,7 +141,7 @@ class ExtractMetadataTestCase(FitsOpsTestCase):
     self.assertIn("SIMPLE", [md[0] for md in metadata])
 
 
-class FitsOpsdataTestCase(FitsOpsTestCase):
+class FitsMetadataTestCase(FitsOpsTestCase):
 
   def setUp(self):
     "Initialize the test case"
@@ -170,6 +170,9 @@ class FitsOpsdataTestCase(FitsOpsTestCase):
     self.assertNotEqual(metadata, None)
     self.assertEqual(len(metadata), self.test_file_md_count)
     mdkeys = [md[0] for md in metadata]
+    self.assertIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
     self.assertIn("NAXIS", mdkeys)
     self.assertIn("NAXIS1", mdkeys)
     self.assertIn("NAXIS2", mdkeys)
@@ -186,6 +189,9 @@ class FitsOpsdataTestCase(FitsOpsTestCase):
     self.assertNotEqual(metadata, None)
     self.assertEqual(len(metadata), self.test_file_md_count)
     mdkeys = [md[0] for md in metadata]
+    self.assertIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
     self.assertIn("obs_title", mdkeys)
     self.assertIn("spatial_axis_1_number_bins", mdkeys)
     self.assertIn("spatial_axis_2_number_bins", mdkeys)
@@ -193,6 +199,62 @@ class FitsOpsdataTestCase(FitsOpsTestCase):
     self.assertIn("facility_name", mdkeys)
     self.assertIn("obs_creator_name", mdkeys)
     self.assertIn("obs_title", mdkeys)
+
+
+  def test_keys_subset_empty(self):
+    "Extract all metadata if keys_subset is empty"
+    metadata = fo.fits_metadata(self.test_file, {"keys_subset": []})
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), self.test_file_md_count)
+    mdkeys = [md[0] for md in metadata]
+    self.assertIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+
+  def test_keys_subset_1(self):
+    "Extract metadata for singleton keys_subset"
+    ksubset = ["ORIGIN"]
+    ks_len = 2 + len(ksubset)               # RA and DEC added automatically
+    metadata = fo.fits_metadata(self.test_file, {"keys_subset": ksubset})
+    self.assertNotEqual(metadata, None)
+    # [print(item) for item in metadata]      # DEBUGGING
+    self.assertEqual(len(metadata), ks_len)
+    mdkeys = [md[0] for md in metadata]
+    self.assertNotIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    for key in ksubset:
+      self.assertIn(key, mdkeys)
+
+  def test_keys_subset_no_alt(self):
+    "Extract metadata for specified keys_subset which has no alternative keys"
+    ksubset = ["CRPIX1", "CRPIX2", "ELEVATIO", "AIRMASS"]
+    ks_len = 2 + len(ksubset)               # RA and DEC added automatically
+    metadata = fo.fits_metadata(self.test_file, {"keys_subset": ksubset})
+    self.assertNotEqual(metadata, None)
+    # [print(item) for item in metadata]      # DEBUGGING
+    self.assertEqual(len(metadata), ks_len)
+    mdkeys = [md[0] for md in metadata]
+    self.assertNotIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    for key in ksubset:
+      self.assertIn(key, mdkeys)
+
+  def test_keys_subset_all_alt(self):
+    "Extract metadata for specified keys_subset, all of which have alternative keys"
+    ksubset = ["NAXIS1", "NAXIS2", "DATE-OBS", "INSTRUME"]
+    ks_len = 2 + (2 * len(ksubset))         # RA and DEC added automatically
+    metadata = fo.fits_metadata(self.test_file, {"keys_subset": ksubset})
+    self.assertNotEqual(metadata, None)
+    # [print(item) for item in metadata]      # DEBUGGING
+    self.assertEqual(len(metadata), ks_len)
+    mdkeys = [md[0] for md in metadata]
+    self.assertNotIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    for key in ksubset:
+      self.assertIn(key, mdkeys)
 
 
   def test_fits_hdu_info(self):
