@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Rewrite, simplify most methods using stateful FM instance.
+#   Last Modified: Only add alternate keys to keys_subset if actually using keys_subset.
 #
 import os
 import sys
@@ -63,9 +63,9 @@ def fits_verify(file_path, options=None):
 
 def _post_process_metadata(fm, keys_subset):
     """ Post process the accumulated metadata; handle a couple of special cases. """
-    for item in fm.metadata():              # check all metadata items for special cases.
-        _handle_alternate_key(fm, item, keys_subset)
-        _handle_ctype_mapping(fm, item, keys_subset)
+    for item in fm.metadata():              # check all metadata items for special cases
+        _handle_alternate_key(fm, item, keys_subset) # fm and key_subset modified by side-effect
+        _handle_ctype_mapping(fm, item, keys_subset) # fm and key_subset modified by side-effect
 
     if (keys_subset):                       # if user requested only a subset of the metadata
         return fm.filter_by_keys(keys_subset) # filter the metadata by the keys subset
@@ -76,11 +76,19 @@ def _post_process_metadata(fm, keys_subset):
 def _handle_alternate_key(fm, item, keys_subset):
     """ For items whose keys are listed in the alternate key table, duplicate the item
         but use the alternate keyword for the duplicated item. """
-    alt_key = _ALTERNATE_KEYS_MAP.get(item.keyword) # try to get an alternate key for this item
+    item_key = item.keyword                 # keyword of this item
+    alt_key = _ALTERNATE_KEYS_MAP.get(item_key) # try to get an alternate key for this item
     if (alt_key):                           # if an alternate key exists
-        fm.copy_item(item.keyword, alt_key) # copy standard item w/ alternate keyword
         if (keys_subset):                   # if only a subset of keys requested
-            keys_subset.append(alt_key)     # add the alternate keyword to the subset
+            if (item_key in keys_subset):   # and this item key is in that subset
+                if (fm.copy_item(item_key, alt_key)): # copy standard item w/ alternate keyword
+                    keys_subset.append(alt_key) # if copied, add alternate keyword to the subset
+                else:                           # else copy failed: move on
+                    pass
+            else:                           # else key not in subset: ignore this item
+                pass
+        else:                               # else not using a subset, so copy item
+            fm.copy_item(item_key, alt_key) # copy standard item w/ alternate keyword
 
 
 def _handle_ctype_mapping(fm, item, keys_subset):
