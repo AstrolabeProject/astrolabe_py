@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Fix bugs as result of testing. Return copies of stateful objects.
+  Last Modified: Move filepath key constant back to module scope.
 """
 __version__ = "0.0.5"
 __author__ = "Tom Hicks"
@@ -18,6 +18,8 @@ logging.basicConfig(level=logging.ERROR)    # default logging configuration
 # class to hold an individual metadatum, a list of which is the metadata
 Metadatum = collections.namedtuple('Metadatum', ['keyword', 'value'])
 
+FILEPATH_KEY = "filepath"
+
 def default_cleaner_fn(fld):
     """ Return a copy of the given field cleaned up by removing any unwanted characters. """
     if (isinstance(fld, str)):
@@ -29,8 +31,6 @@ def default_cleaner_fn(fld):
 class FitsMeta:
     """ Class to extract and format metadata from FITS files. """
 
-    FILEPATH_KEY = "filepath"
-
     def __init__(self, filepath, cleaner=default_cleaner_fn):
         self._filepath = filepath
         hdulist = fits.open(self._filepath) # raises error if unable to read file
@@ -38,7 +38,7 @@ class FitsMeta:
         hdu0 = hdulist[0]                   # get first HDU
         hdu0.verify('silentfix+ignore')     # fix fixable items in the first HDU
         self._metadata = self._extract_metadata(hdu0.header, cleaner)
-        self._metadata.append(Metadatum(self.FILEPATH_KEY, self._filepath))
+        self._metadata.append(Metadatum(FILEPATH_KEY, self._filepath))
         self._update_key_set()              # compute initial set of metadata keys
         hdulist.close()                     # close the file
 
