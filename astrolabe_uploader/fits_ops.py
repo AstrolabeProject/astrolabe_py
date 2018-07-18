@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: WIP but update for reversion of methods to stateful paradigm.
+#   Last Modified: Rewrite, simplify most methods using stateful FM instance.
 #
 import os
 import sys
@@ -9,116 +9,96 @@ import warnings
 from astropy.io import fits
 from astrolabe_uploader.fits_meta import FitsMeta
 
-# **** TODO LATER: make all these var non-public ***
-
 # dictionary of alternates for standard FITS metadata keys
-ALTERNATE_KEYS_MAP = {
-"spatial_axis_1_number_bins": "NAXIS1",
-"spatial_axis_2_number_bins": "NAXIS2",
-"start_time": "DATE-OBS",
-"facility_name": "INSTRUME",
-"instrument_name": "TELESCOP",
-"obs_creator_name": "OBSERVER",
-"obs_title": "OBJECT"
+_ALTERNATE_KEYS_MAP = {
+    "NAXIS1": "spatial_axis_1_number_bins",
+    "NAXIS2": "spatial_axis_2_number_bins",
+    "DATE-OBS": "start_time",
+    "INSTRUME": "facility_name",
+    "TELESCOP": "instrument_name",
+    "OBSERVER": "obs_creator_name",
+    "OBJECT": "obs_title"
 }
-ALTERNATE_KEYS = set(ALTERNATE_KEYS_MAP.keys())
 
-# dictionary mapping CRVALs to their interpretation items
-CRVALS = { "CRVAL1": "CTYPE1", "CRVAL2": "CTYPE2" }
-CRVAL_KEYS = set(CRVALS.keys())
+# dictionary mapping CTYPE* key names to their associated CRVAL* key names.
+_CTYPES = { "CTYPE1": "CRVAL1",  "CTYPE2": "CRVAL2" }
 
-FILEPATH_KEY = "filepath"                   # TODO LATER: read from fits_meta
 
-def fits_metadata(file_path, options):
-    "Return a list Metadatum tuples extracted from the given FITS file"
-    desired_keys = get_metadata_keys(options)
+def fits_metadata(file_path, options={}):
+    """ Return a list Metadatum tuples extracted from the given FITS file. """
+    keys_subset = options.get("keys_subset")
     fm = FitsMeta(file_path)
-    metadata = post_process_metadata(fm, desired_keys)
+    metadata = _post_process_metadata(fm, keys_subset)
     return metadata
 
 
-# def fits_metadataX(file_path, options):
-#     "Return a list of key/value metadata tuples (strings) extracted from the given FITS file"
-#     desired_keys = get_metadata_keys(options)
-#     with fits.open(file_path) as hdu:
-#         metadata = extract_metadata(file_path, hdu, desired_keys)
-#     # filter out any metadata key/value pairs without values
-#     return [mdata for mdata in metadata if mdata[1]]
-
-
 def fits_hdu_info(file_path, options=None):
-    "Return a list of summary information strings for the HDUs of the given FITS file"
+    """ Return a list of summary information strings for the HDUs of the given FITS file. """
     fm = FitsMeta(file_path)
     hduinfo = fm.hdu_info()
     filename = os.path.basename(fm.filepath())
     # format the information into a report (a list of strings):
-    results = ['Filename: {}'.format(filename),
-               'No.    Name      Ver    Type      Cards   Dimensions   Format']
-    layout = '{:3d}  {:10}  {:3} {:11}  {:5d}   {}   {}   {}'
+    results = ["Filename: {}".format(filename),
+               "No.    Name      Ver    Type      Cards   Dimensions   Format"]
+    layout = "{:3d}  {:10}  {:3} {:11}  {:5d}   {}   {}   {}"
     for hinfo in hduinfo:
         results.append(layout.format(*hinfo))
     return results
 
 
 def fits_verify(file_path, options=None):
-    """Verify that the data in the given FITS file conforms to the FITS standard.
-       Writes any verification warnings to the specified problem log file.
+    """ Verify that the data in the given FITS file conforms to the FITS standard.
+        Return a (possibly empty) list of verification warning strings.
     """
-    problems_file = "problems.txt"
+    results = []
     with fits.open(file_path) as hdu:
         with warnings.catch_warnings(record=True) as warns:
             hdu.verify("fix+warn")
             if (warns and len(warns) > 0):
-                print("Filename: " + file_path)
+                results.append("Filename: {}".format(file_path))
                 for warn in warns:
-                    print(str(warn.message))
+                    results.append(str(warn.message))
+    return results
 
 
-def get_metadata_keys(options):
-    "Return a list of metadata keys to be extracted"
-    keyfile = options.get("keyfile")
-    with open(keyfile, "r") as mdkeys_file:
-        return mdkeys_file.read().splitlines()
+def _post_process_metadata(fm, keys_subset):
+    """ Post process the accumulated metadata; handle a couple of special cases. """
+    for item in fm.metadata():              # check all metadata items for special cases.
+        _handle_alternate_key(fm, item, keys_subset)
+        _handle_ctype_mapping(fm, item, keys_subset)
+
+    if (keys_subset):                       # if user requested only a subset of the metadata
+        return fm.filter_by_keys(keys_subset) # filter the metadata by the keys subset
+    else:
+        return fm.metadata()                # else just return all the accumulated metadata
 
 
-def handle_ctype_mapping(key, file_metadata, metadata):
-    """ If a metadata item has a CRVAL* key, it holds a value whose interpretation is defined
-        by a corresponding CTYPE* metadata item. Add the base CRVAL item and then add another
-        item with an interpretated key and the CRVAL value.
+def _handle_alternate_key(fm, item, keys_subset):
+    """ For items whose keys are listed in the alternate key table, duplicate the item
+        but use the alternate keyword for the duplicated item. """
+    alt_key = _ALTERNATE_KEYS_MAP.get(item.keyword) # try to get an alternate key for this item
+    if (alt_key):                           # if an alternate key exists
+        fm.copy_item(item.keyword, alt_key) # copy standard item w/ alternate keyword
+        if (keys_subset):                   # if only a subset of keys requested
+            keys_subset.append(alt_key)     # add the alternate keyword to the subset
+
+
+def _handle_ctype_mapping(fm, item, keys_subset):
+    """ If a metadata item has a CTYPE key, it holds the interpretation of a corresponding
+        CRVAL metadata item. Add a new item with the 'interpretation' key and the CRVAL value.
         For CRVALs and how they relate to CTYPEs see https://fits.gsfc.nasa.gov/fits_standard.html
     """
-    ctype_key = CRVALS.get(key)             # get CTYPE* key interpreting the CRVAL* item
-    if (ctype_key):                         # sanity check: CRVAL* key must be CRVALS dictionary
-        metadata.append( (key, file_metadata.get(key)) )
-        if "RA" in file_metadata[ctype_key]:
-            metadata.append( ("right_ascension", file_metadata.get(key)) )
-        elif "DEC" in file_metadata[ctype_key]:
-            metadata.append( ("declination", file_metadata.get(key)) )
+    # if this item's key is a CTYPE key, then get the CRVAL key interpreted by this item:
+    crval_key = _CTYPES.get(item.keyword)   # lookup this item's key in CTYPE dictionary
+    if (crval_key):                         # if this item key is a CTYPE key
+        if "RA" in item.value:              # if this CTYPE item's value contains RA
+            interp_key = "right_ascension"     # the 'interpretation' of the CRVAL value
+        elif "DEC" in item.value:           # else if this CTYPE item's value contains DEC
+            interp_key = "declination"         # the 'interpretation' of the CRVAL value
         else:                               # we only handle these interpretations, so far
-            pass
+            interp_key = None
 
-def post_process_metadata(fm, desired_keys):
-    # TODO: copy keys for aliases and ctype handling
-    # TODO: ???
-    return fm.filter_by_keys(desired_keys)
-
-
-def extract_metadata(file_path, hdu, desired_keys):
-    """Extract the metadata from the HeaderDataUnit of the given file for the keys
-       in the given list of sought keys. Return a list of metadata key/value tuples."""
-    file_metadata = hdu[0].header
-    metadata = []                                   # return list of metadata key/value tuples
-    for key in desired_keys:
-        try:
-            if (key == FILEPATH_KEY):                       # special case: include file path
-                metadata.append( (FILEPATH_KEY, str(file_path)) )
-            elif (key in ALTERNATE_KEYS):                   # is this an alternate key?
-                standard_key = ALTERNATE_KEYS_MAP[key]      # get more standard key
-                metadata.append( (key, file_metadata.get(standard_key)) )
-            elif (key in CRVAL_KEYS):
-                handle_ctype_mapping(key, file_metadata, metadata)
-            else:                                           # just lookup the given key
-                metadata.append( (key, file_metadata.get(key)) )
-        except KeyError:
-            metadata.append( (key, "") )
-    return metadata
+        if (interp_key):                    # if we have a workable intepretation
+            copied = fm.copy_item(crval_key, interp_key) # copy CRVAL value w/ interpretation key
+            if (copied and keys_subset):       # if only a subset of keys requested
+                keys_subset.append(interp_key) # add the interpretation keyword to the subset
