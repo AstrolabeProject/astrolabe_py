@@ -2,18 +2,19 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add test for fits_hdu_info method.
+#   Last Modified: WIP: begin rewrite for rewritten fits_ops module.
 #
 import unittest
 from astropy.io import fits
 
 from context import fo                      # the module under test
+from astrolabe_uploader.fits_meta import FILEPATH_KEY
+
 
 def suite():
   suite = unittest.TestSuite()
-  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(GetMetadataKeysTestCase))
-  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(HandleCtypeMappingTestCase))
-  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ExtractMetadataTestCase))
+#  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(HandleCtypeMappingTestCase))
+#  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ExtractMetadataTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsOpsdataTestCase))
   return suite
 
@@ -23,40 +24,16 @@ class FitsOpsTestCase(unittest.TestCase):
   "Base test class"
   @classmethod
   def setUpClass(cls):
-    cls.default_options = { "keyfile": "metadata-keys.txt" }
-    cls.test_files = [ "cvnidwabcut.fits" ]
-
-
-class GetMetadataKeysTestCase(FitsOpsTestCase):
-
-  def setUp(self):
-    "Initialize the test case"
-    pass
-
-  def test_bad_metdata_keyfile(self):
-    "Throws exception on bad metadata key filename"
-    self.assertRaises(FileNotFoundError, fo.get_metadata_keys, {"keyfile": "BAD_KEYFILE_NAME"})
-
-  def test_empty_metadata_keys(self):
-    "Return empty list of desired metadata keys"
-    keys = fo.get_metadata_keys({"keyfile": "empty-metadata-keyfile.txt"})
-    self.assertNotEqual(keys, None)
-    self.assertEqual(len(keys), 0)
-    self.assertNotIn(fo.FILEPATH_KEY, keys)
-
-  def test_get_metadata_keys(self):
-    "Gets a list of desired metadata keys from keyfile"
-    keys = fo.get_metadata_keys(self.default_options)
-    self.assertNotEqual(keys, None)
-    self.assertEqual(len(keys), 52)
-    self.assertIn(fo.FILEPATH_KEY, keys)
+    cls.default_options = {}
+    cls.test_file = "cvnidwabcut.fits"
+    cls.test_file_md_count = 63
 
 
 class HandleCtypeMappingTestCase(FitsOpsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    datafile = fits.open(self.test_files[0])
+    datafile = fits.open(self.test_file)
     self.file_metadata = datafile[0].header
     datafile.close()
 
@@ -119,35 +96,35 @@ class ExtractMetadataTestCase(FitsOpsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.hduList = fits.open(self.test_files[0])
+    self.hduList = fits.open(self.test_file)
 
   def tearDown(self):
     self.hduList.close()
 
   def test_no_metadata_keys(self):
     "Extract no metadata if no metadata keys specified"
-    metadata = fo.extract_metadata(self.test_files[0], self.hduList, [])  # no desired keys
+    metadata = fo.extract_metadata(self.test_file, self.hduList, [])  # no desired keys
     self.assertNotEqual(metadata, None)
     self.assertEqual(len(metadata), 0)
-    self.assertNotIn(fo.FILEPATH_KEY, metadata)
+    self.assertNotIn(FILEPATH_KEY, metadata)
 
   def test_filepath_key(self):
     "Extract file path, if special FILEPATH_KEY is given"
-    metadata = fo.extract_metadata(self.test_files[0], self.hduList, [fo.FILEPATH_KEY])
+    metadata = fo.extract_metadata(self.test_file, self.hduList, [FILEPATH_KEY])
     self.assertNotEqual(metadata, None)
     self.assertEqual(len(metadata), 1)
-    self.assertIn(fo.FILEPATH_KEY, [md[0] for md in metadata])
+    self.assertIn(FILEPATH_KEY, [md[0] for md in metadata])
 
   def test_an_alternate_key(self):
     "Extract metadata for the given alternate key"
-    metadata = fo.extract_metadata(self.test_files[0], self.hduList, ["obs_creator_name"])
+    metadata = fo.extract_metadata(self.test_file, self.hduList, ["obs_creator_name"])
     self.assertNotEqual(metadata, None)
     self.assertEqual(len(metadata), 1)
     self.assertIn("obs_creator_name", [md[0] for md in metadata])
 
   def test_CRVAL_keys(self):
     "Extract metadata for the given CRVAL* keys"
-    metadata = fo.extract_metadata(self.test_files[0], self.hduList, ["CRVAL1", "CRVAL2"])
+    metadata = fo.extract_metadata(self.test_file, self.hduList, ["CRVAL1", "CRVAL2"])
     self.assertNotEqual(metadata, None)
     self.assertEqual(len(metadata), 4)
     mdkeys = [md[0] for md in metadata]
@@ -158,7 +135,7 @@ class ExtractMetadataTestCase(FitsOpsTestCase):
 
   def test_normal_key(self):
     "Extract metadata key for the given normal key"
-    metadata = fo.extract_metadata(self.test_files[0], self.hduList, ["SIMPLE"])
+    metadata = fo.extract_metadata(self.test_file, self.hduList, ["SIMPLE"])
     self.assertNotEqual(metadata, None)
     self.assertEqual(len(metadata), 1)
     self.assertIn("SIMPLE", [md[0] for md in metadata])
@@ -175,33 +152,63 @@ class FitsOpsdataTestCase(FitsOpsTestCase):
     self.assertRaises(FileNotFoundError,
                       fo.fits_metadata, "NO_SUCH_FILEPATH", self.default_options)
 
-  def test_no_metadata_keys(self):
-    "Extract no metadata if no metadata keys specified"
-    metadata = fo.fits_metadata(self.test_files[0], {"keyfile": "empty-metadata-keyfile.txt"})
-    self.assertNotEqual(metadata, None)
-    self.assertEqual(len(metadata), 0)
-    self.assertNotIn(fo.FILEPATH_KEY, metadata)
 
-  def test_metadata(self):
-    "Extract metadata if default metadata keys specified"
-    metadata = fo.fits_metadata(self.test_files[0], self.default_options)
-    # print(metadata)                         # DEBUGGING
+  def test_no_md_keys(self):
+    "Extract all metadata if no keys_subset specified"
+    metadata = fo.fits_metadata(self.test_file)
     self.assertNotEqual(metadata, None)
-    self.assertEqual(len(metadata), 17)
-
+    self.assertEqual(len(metadata), self.test_file_md_count)
     mdkeys = [md[0] for md in metadata]
-    self.assertIn(fo.FILEPATH_KEY, mdkeys)
+    self.assertIn(FILEPATH_KEY, mdkeys)
     self.assertIn("right_ascension", mdkeys)
     self.assertIn("declination", mdkeys)
-    self.assertIn("obs_title", mdkeys)
+
+  def test_md_standard_keys(self):
+    "Standard keys are extracted to metadata"
+    metadata = fo.fits_metadata(self.test_file)
+    # [print(item) for item in metadata]      # DEBUGGING
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), self.test_file_md_count)
+    mdkeys = [md[0] for md in metadata]
+    self.assertIn("NAXIS", mdkeys)
+    self.assertIn("NAXIS1", mdkeys)
+    self.assertIn("NAXIS2", mdkeys)
+    self.assertIn("DATE-OBS", mdkeys)
+    self.assertIn("INSTRUME", mdkeys)
+    self.assertIn("OBJECT", mdkeys)
+    self.assertIn("OBSERVER", mdkeys)
     self.assertIn("ORIGIN", mdkeys)
+
+  def test_md_alternate_keys(self):
+    "Alternate keys are computed and added to metadata"
+    metadata = fo.fits_metadata(self.test_file)
+    # [print(item) for item in metadata]      # DEBUGGING
+    self.assertNotEqual(metadata, None)
+    self.assertEqual(len(metadata), self.test_file_md_count)
+    mdkeys = [md[0] for md in metadata]
+    self.assertIn("obs_title", mdkeys)
+    self.assertIn("spatial_axis_1_number_bins", mdkeys)
+    self.assertIn("spatial_axis_2_number_bins", mdkeys)
+    self.assertIn("start_time", mdkeys)
+    self.assertIn("facility_name", mdkeys)
+    self.assertIn("obs_creator_name", mdkeys)
+    self.assertIn("obs_title", mdkeys)
+
 
   def test_fits_hdu_info(self):
     "Get summary info report for the HDUs of a file"
-    report = fo.fits_hdu_info(self.test_files[0], self.default_options)
+    report = fo.fits_hdu_info(self.test_file)
     self.assertNotEqual(report, None)
     self.assertEqual(len(report), 3)        # filename, heading, one HDU line
     self.assertTrue(all([type(line) == str for line in report]))
+
+
+  def test_fits_verify(self):
+    "Get verification report for the HDUs of a file"
+    report = fo.fits_verify(self.test_file)
+    self.assertNotEqual(report, None)
+    self.assertTrue(all([type(line) == str for line in report]))
+    self.assertEqual(len(report), 6)        # Filename, preamble, HDU#, Card#, ErrorMsg, Note
 
 
 if __name__ == "__main__":
