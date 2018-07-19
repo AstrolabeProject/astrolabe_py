@@ -2,19 +2,20 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add tests for metadata with keys_subset.
+#   Last Modified: Add some tests for _handle_ctype_mapping.
 #
 import unittest
 from astropy.io import fits
 
 from context import fo                      # the module under test
+from context import fm
 from astrolabe_uploader.fits_meta import FILEPATH_KEY
 
 
 def suite():
   suite = unittest.TestSuite()
-#  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(HandleCtypeMappingTestCase))
-#  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ExtractMetadataTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(HandleCtypeMappingTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(HandleAltMappingTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FitsMetadataTestCase))
   return suite
 
@@ -33,112 +34,71 @@ class HandleCtypeMappingTestCase(FitsOpsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    datafile = fits.open(self.test_file)
-    self.file_metadata = datafile[0].header
-    datafile.close()
-
-  def test_nocrval(self):
-    "Handle missing or bad CRVAL key strings"
-    metadata = []
-    self.assertFalse(metadata)
-    fo.handle_ctype_mapping("", self.file_metadata, metadata)
-    fo.handle_ctype_mapping("BADKEY", self.file_metadata, metadata)
-    self.assertFalse(metadata)
-
-  def test_crval1(self):
-    "Interpret CRVAL1 metadata item from real data"
-    metadata = []
-    self.assertFalse(metadata)
-    fo.handle_ctype_mapping("CRVAL1", self.file_metadata, metadata)
-    self.assertTrue(metadata)
-    self.assertEqual(len(metadata), 2)
-    self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
-    self.assertNotIn("CRVAL2", [md[0] for md in metadata])
-    self.assertIn("right_ascension", [md[0] for md in metadata])
-
-  def test_crval2(self):
-    "Interpret CRVAL2 metadata item from real data"
-    metadata = []
-    self.assertFalse(metadata)
-    fo.handle_ctype_mapping("CRVAL2", self.file_metadata, metadata)
-    self.assertTrue(metadata)
-    self.assertEqual(len(metadata), 2)
-    self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
-    self.assertNotIn("CRVAL1", [md[0] for md in metadata])
-    self.assertIn("declination", [md[0] for md in metadata])
-
-  def test_swapped_crval1(self):
-    "Interpret CRVAL1 metadata item with swapped CTYPE value"
-    metadata = []
-    self.assertFalse(metadata)
-    self.file_metadata["CTYPE1"] = "DEC--TAN"    # alter incoming metadata
-    fo.handle_ctype_mapping("CRVAL1", self.file_metadata, metadata)
-    self.assertTrue(metadata)
-    self.assertEqual(len(metadata), 2)
-    self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
-    self.assertNotIn("CRVAL2", [md[0] for md in metadata])
-    self.assertIn("declination", [md[0] for md in metadata])
-
-  def test_swapped_crval2(self):
-    "Interpret CRVAL2 metadata item with swapped CTYPE value"
-    metadata = []
-    self.assertFalse(metadata)
-    self.file_metadata["CTYPE2"] = "RA--TAN"    # alter incoming metadata
-    fo.handle_ctype_mapping("CRVAL2", self.file_metadata, metadata)
-    self.assertTrue(metadata)
-    self.assertEqual(len(metadata), 2)
-    self.assertTrue(all([isinstance(md, tuple) for md in metadata]))
-    self.assertNotIn("CRVAL1", [md[0] for md in metadata])
-    self.assertIn("right_ascension", [md[0] for md in metadata])
+    self.fmeta = fm.FitsMeta(self.test_file)
 
 
-class ExtractMetadataTestCase(FitsOpsTestCase):
+  def test_ctype_no_ks(self):
+    "Test valid CTYPE item with RA, no keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
+    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "RA--TAN"), [])
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertNotIn("declination", mdk1)
+    self.assertIn("right_ascension", mdk1)
+
+  def test_swapped_ctype_no_ks(self):
+    "Test valid CTYPE item with DEC, no keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
+    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "DEC--TAN"), [])
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("declination", mdk1)
+    self.assertNotIn("right_ascension", mdk1)
+
+  def test_ctype_ks(self):
+    "Test valid CTYPE item with RA, keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["NAXIS"]
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
+    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "RA--TAN"), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertNotIn("declination", mdk1)
+    self.assertNotIn("declination", ksub)
+    self.assertIn("right_ascension", mdk1)
+    self.assertIn("right_ascension", ksub)
+
+  def test_swapped_ctype_ks(self):
+    "Test valid CTYPE item with DEC, keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["NAXIS"]
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
+    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "DEC--TAN"), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertNotIn("right_ascension", mdk1)
+    self.assertNotIn("right_ascension", ksub)
+    self.assertIn("declination", mdk1)
+    self.assertIn("declination", ksub)
+
+
+
+class HandleAltMappingTestCase(FitsOpsTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.hduList = fits.open(self.test_file)
+    self.fmeta = fm.FitsMeta(self.test_file)
 
-  def tearDown(self):
-    self.hduList.close()
-
-  def test_no_metadata_keys(self):
-    "Extract no metadata if no metadata keys specified"
-    metadata = fo.extract_metadata(self.test_file, self.hduList, [])  # no desired keys
-    self.assertNotEqual(metadata, None)
-    self.assertEqual(len(metadata), 0)
-    self.assertNotIn(FILEPATH_KEY, metadata)
-
-  def test_filepath_key(self):
-    "Extract file path, if special FILEPATH_KEY is given"
-    metadata = fo.extract_metadata(self.test_file, self.hduList, [FILEPATH_KEY])
-    self.assertNotEqual(metadata, None)
-    self.assertEqual(len(metadata), 1)
-    self.assertIn(FILEPATH_KEY, [md[0] for md in metadata])
-
-  def test_an_alternate_key(self):
-    "Extract metadata for the given alternate key"
-    metadata = fo.extract_metadata(self.test_file, self.hduList, ["obs_creator_name"])
-    self.assertNotEqual(metadata, None)
-    self.assertEqual(len(metadata), 1)
-    self.assertIn("obs_creator_name", [md[0] for md in metadata])
-
-  def test_CRVAL_keys(self):
-    "Extract metadata for the given CRVAL* keys"
-    metadata = fo.extract_metadata(self.test_file, self.hduList, ["CRVAL1", "CRVAL2"])
-    self.assertNotEqual(metadata, None)
-    self.assertEqual(len(metadata), 4)
-    mdkeys = [md[0] for md in metadata]
-    self.assertIn("declination", mdkeys)
-    self.assertIn("CRVAL1", mdkeys)
-    self.assertIn("right_ascension", mdkeys)
-    self.assertIn("CRVAL2", mdkeys)
-
-  def test_normal_key(self):
-    "Extract metadata key for the given normal key"
-    metadata = fo.extract_metadata(self.test_file, self.hduList, ["SIMPLE"])
-    self.assertNotEqual(metadata, None)
-    self.assertEqual(len(metadata), 1)
-    self.assertIn("SIMPLE", [md[0] for md in metadata])
 
 
 class FitsMetadataTestCase(FitsOpsTestCase):
