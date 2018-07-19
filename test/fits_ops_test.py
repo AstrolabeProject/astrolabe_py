@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add some tests for _handle_ctype_mapping.
+#   Last Modified: Add some tests for _handle_alternate_key.
 #
 import unittest
 from astropy.io import fits
@@ -98,6 +98,146 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
   def setUp(self):
     "Initialize the test case"
     self.fmeta = fm.FitsMeta(self.test_file)
+
+  def test_bogus_key_no_ks(self):
+    "Test bogus item, no keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    self.assertNotIn("BOGUS", mdk0)
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("BOGUS", 2), [])
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertNotIn("BOGUS", mdk1)
+
+  def test_non_altkey_no_ks(self):
+    "Test standard item, no keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    self.assertIn("NAXIS", mdk0)
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("NAXIS", 2), [])
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("NAXIS", mdk1)
+
+  def test_altkey_no_ks(self):
+    "Test alternate key item, no keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    self.assertIn("OBJECT", mdk0)
+    self.assertNotIn("obs_title", mdk0)
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("OBJECT", "Chandra"), [])
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("OBJECT", mdk1)
+    self.assertIn("obs_title", mdk1)
+
+
+  def test_bogus_key_ks_notinks(self):
+    "Test bogus item, bogus key NOT in keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["NAXIS"]
+    self.assertIn("NAXIS", ksub)            # in key subset
+    self.assertNotIn("BOGUS", ksub)         # NOT in key subset
+    self.assertNotIn("BOGUS", mdk0)         # NOT in original metadata
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("BOGUS", 2), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("NAXIS", ksub)            # still in key subset
+    self.assertNotIn("BOGUS", ksub)         # still NOT in key subset
+    self.assertNotIn("BOGUS", mdk1)         # still NOT in metadata
+
+  def test_bogus_key_ks_inks(self):
+    "Test bogus item, bogus key in keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["BOGUS"]
+    self.assertIn("BOGUS", ksub)            # in key subset
+    self.assertNotIn("BOGUS", mdk0)         # NOT in original metadata
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("BOGUS", 2), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("BOGUS", ksub)            # still in key subset
+    self.assertNotIn("BOGUS", mdk1)         # still NOT in metadata
+
+  def test_non_altkey_ks_notinks(self):
+    "Test standard item, key NOT in keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["ZZZ"]
+    self.assertIn("ZZZ", ksub)              # in key subset
+    self.assertIn("NAXIS", mdk0)            # in original metadata
+    self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("NAXIS", 2), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("ZZZ", ksub)              # still in key subset
+    self.assertIn("NAXIS", mdk1)            # still in metadata
+    self.assertNotIn("ZZZ", mdk1)           # still NOT in metadata
+
+  def test_non_altkey_ks_inks(self):
+    "Test standard item, key in keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["ZZZ", "NAXIS"]
+    self.assertIn("ZZZ", ksub)              # in key subset
+    self.assertIn("NAXIS", ksub)            # in key subset
+    self.assertIn("NAXIS", mdk0)            # in original metadata
+    self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("NAXIS", 2), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("ZZZ", ksub)              # still in key subset
+    self.assertIn("NAXIS", ksub)            # still in key subset
+    self.assertIn("NAXIS", mdk1)            # still in metadata
+    self.assertNotIn("ZZZ", mdk1)           # still NOT in metadata
+
+
+  def test_altkey_ks_notinks(self):
+    "Test alternate key item, key NOT in keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["NAXIS", "ZZZ"]
+    self.assertIn("NAXIS", ksub)            # in key subset
+    self.assertIn("ZZZ", ksub)              # in key subset
+    self.assertNotIn("OBJECT", ksub)        # NOT in key subset
+    self.assertNotIn("obs_title", ksub)     # NOT in key subset
+    self.assertIn("NAXIS", mdk0)            # in original metadata
+    self.assertIn("OBJECT", mdk0)           # in original metadata
+    self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
+    self.assertNotIn("obs_title", mdk0)     # NOT in original metadata
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("OBJECT", "Chandra"), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("NAXIS", ksub)            # still in key subset
+    self.assertIn("ZZZ", ksub)              # still in key subset
+    self.assertNotIn("OBJECT", ksub)        # still NOT in key subset
+    self.assertNotIn("obs_title", ksub)     # still NOT in key subset
+    self.assertIn("NAXIS", mdk1)            # still in metadata
+    self.assertIn("OBJECT", mdk1)           # still in metadata
+    self.assertNotIn("ZZZ", mdk1)           # still NOT in metadata
+    self.assertNotIn("obs_title", mdk1)     # still NOT in metadata
+
+  def test_altkey_ks_inks(self):
+    "Test alternate key item, key in keys subset"
+    md0 = self.fmeta.metadata()
+    mdk0 = [md[0] for md in md0]
+    ksub = ["OBJECT", "ZZZ"]
+    self.assertIn("OBJECT", ksub)           # in key subset
+    self.assertIn("ZZZ", ksub)              # in key subset
+    self.assertNotIn("obs_title", ksub)     # NOT in key subset
+    self.assertIn("OBJECT", mdk0)           # in original metadata
+    self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
+    self.assertNotIn("obs_title", mdk0)     # NOT in original metadata
+    fo._handle_alternate_key(self.fmeta, fm.Metadatum("OBJECT", "Chandra"), ksub)
+    md1 = self.fmeta.metadata()
+    mdk1 = [md[0] for md in md1]
+    self.assertIn("OBJECT", ksub)           # still in key subset
+    self.assertIn("ZZZ", ksub)              # still in key subset
+    self.assertIn("obs_title", ksub)        # now added to key subset
+    self.assertIn("OBJECT", mdk1)           # still in metadata
+    self.assertNotIn("ZZZ", mdk1)           # still NOT in metadata
+    self.assertIn("obs_title", mdk1)        # now added to metdata
 
 
 
