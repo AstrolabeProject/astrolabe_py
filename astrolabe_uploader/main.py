@@ -2,7 +2,7 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Initial port and stub creation from DE program.
+#   Last Modified: Rename main module. Move file/dir logic to uploader module.
 #
 import getopt
 import os
@@ -10,6 +10,8 @@ import fnmatch
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+import astrolabe_uploader.uploader as up
 
 # Text file of desired metadata keys, one per line
 _DEFAULT_KEYS_FILE = "metadata-keys.txt"
@@ -90,19 +92,10 @@ def main(argv):
 
     # execute action sequence for a single file or a directory of files
     if (os.path.isfile(images_path)):
-        # TODO: IMPLEMENT LATER
-        # action_setup(action, images_path, options)
-        # action_dispatch(action, images_path, options)
-        # action_cleanup(action, images_path, options)
-        pass
+        up.do_file(action, images_path, options)
     else:
         if (os.path.isdir(images_path)):
-            # action_setup(action, images_path, options)
-            for fits_file in filter_file_tree(images_path):
-                # TODO: IMPLEMENT LATER
-                pass
-                # action_dispatch(action, fits_file, options)
-            # action_cleanup(action, images_path, options)
+            up.do_tree(action, images_path, options)
         else:
             print("Error: Specified images path '{}' is not a file or directory".format(images_path))
             sys.exit(7)
