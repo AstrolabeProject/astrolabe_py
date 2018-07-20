@@ -1,8 +1,8 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Mkdir returns iRods ID. Add put. Rename method to cd_root.
+  Last Modified: Mkdir returns iRods ID. Add put. Rename cd_root. Workout abs/rel path logic.
 """
-__version__ = "0.0.2"
+__version__ = "0.0.4"
 __author__ = "Tom Hicks"
 
 import os
@@ -10,7 +10,7 @@ import logging
 import pathlib as pl
 from irods.session import iRODSSession
 
-logging.basicConfig(level=logging.ERROR)    # default logging configuration
+logging.basicConfig(level=logging.INFO)    # default logging configuration
 
 class IrodsHelper:
     """ Helper class for iRods commands """
@@ -37,8 +37,8 @@ class IrodsHelper:
 
 
     def __init__(self):
-        self._cwdpath = None                # current working directory path
-        self._root = None                   # root directory path
+        self._cwdpath = None                # current working directory - a PurePath
+        self._root = None                   # root directory path - a PurePath
         self._session = None                # current session
 
     def __enter__(self):
@@ -47,6 +47,10 @@ class IrodsHelper:
     def __exit__(self, exc_type, exc_value, traceback):
         self.cleanup()
 
+
+    def abs_path(self, path):
+        """ Return an iRods path for the given path relative to the users root directory. """
+        return str(self._root / path)
 
     def cleanup(self):
         """ Cleanup the current session. """
@@ -82,10 +86,10 @@ class IrodsHelper:
     def cd_down(self, subdir):
         """ Change the current working directory to the given subdirectory. """
         if (self._cwdpath):
-            self._cwdpath = self._cwdpath / subdir
+            self._cwdpath = self._cwdpath / subdir # NB: maintain PurePath
 
     def cd_root(self):
-        """ Reset the current working directory to the users top-level directory. """
+        """ Reset the current working directory to the users root directory. """
         if (self._root):
             self._cwdpath = pl.PurePath(self._root)
         else:
@@ -111,15 +115,34 @@ class IrodsHelper:
             self._session.cleanup()
             self._session = None
 
+    def get(self, file_path, absolute=False):
+        """ Get the specified local file relative to the iRods current working directory (default)
+            OR relative to the users root directory, if the absolute argument is True.
+        """
+        if (absolute):
+            filepath = self.abs_path(file_path) # path is relative to root dir
+        else:
+            filepath = self.rel_path(file_path) # path is relative to current working dir
+        return self._session.data_objects.get(filepath)
+
     def mkdir(self, subdir_name):
         """ Make a directory (collection) with the given name at the current working directory.
             Returns the iRods ID of the collection.
         """
-        return self._session.collections.create(self._cwdpath / subdir_name)
+        return self._session.collections.create(self.rel_path(subdir_name))
 
-    def put(self, file_path):
-        """ Upload the specified local file to the iRods current working directory. """
-        self._session.data_objects.put(file_path, self._cwdpath)
+    def put(self, local_file, to_dir=None):
+        """ Upload the specified local file to the iRods current working directory (default) or
+            to a directory specified by the 'to_dir' argument.
+        """
+        target_dir = self.cwd()                # default is the current working directory
+        if (to_dir):                           # if alternate directory path specified
+            target_dir = self.abs_path(to_dir) # then dir path is relative to users root dir
+        self._session.data_objects.put(local_file, self.to_dirpath(target_dir))
+
+    def rel_path(self, path):
+        """ Return an iRods path for the given path relative to the current working directory. """
+        return str(self._cwdpath / path)
 
     def root(self):
         """ Return the user root directory as a string. """
@@ -141,9 +164,19 @@ class IrodsHelper:
         self.set_root()                     # call with empty options
 
     def set_root(self, home_dir="home", top_dir=""):
-        """ Compute and set the root directory path to the users iRods home directory. """
+        """ Compute and set the users root directory to the users iRods home directory (default)
+            OR to a subdirectory of the users home directory, specified by the 'top_dir' argument.
+        """
         if (self._session):
             self._root = pl.PurePath("/", self._session.zone, home_dir, self._session.username, top_dir)
         else:
             self._root = None
-        self.cd_root()                      # reset home after changing root dir
+        self.cd_root()                      # cd back to root after changing root dir
+
+    def to_dirpath(self, dir_path):
+        """ Add a trailing slash to the given directory path to mark it is an iRods
+            directory path. This is required by the 'put' command, for example. """
+        if (str(dir_path).endswith("/")):
+            return str(dir_path)
+        else:
+            return "{}/".format(dir_path)
