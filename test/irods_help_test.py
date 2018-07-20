@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Consistent quotes and test doc strings.
+#   Last Modified: Add test for mkdir.
 #
 import unittest
 from irods.session import iRODSSession
@@ -129,6 +129,16 @@ class MovementTestCase(IrodsHelpTestCase):
     self.assertNotEqual(root1, root2)
     self.assertNotEqual(cwd1, cwd2)
     self.assertEqual(cwd2, root2)
+
+  def test_set_mkdir(self):
+    "Make a new directory and move into it"
+    root1 = self.helper.root()
+    cwd1 = self.helper.cwd()
+    self.assertEqual(cwd1, root1)
+    self.helper.mkdir("testDir")            # the test call
+    self.helper.cd_down("testDir")          # move into new subdir
+    cwd2 = self.helper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
 
   def test_cd_down(self):
     "Move down in the filesystem tree"

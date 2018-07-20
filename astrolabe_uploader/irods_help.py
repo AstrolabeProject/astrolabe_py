@@ -1,6 +1,6 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Fix bad indent in connect. Add leading slash in set_root.
+  Last Modified: Add make directory.
 """
 __version__ = "0.0.2"
 __author__ = "Tom Hicks"
@@ -110,6 +110,10 @@ class IrodsHelper:
         if (self._session):
             self._session.cleanup()
             self._session = None
+
+    def mkdir(self, subdir_name):
+        """ Make a directory (collection) with the given name at the current working directory. """
+        coll = self._session.collections.create(self._cwdpath / subdir_name)
 
     def root(self):
         """ Return the user root directory as a string. """
