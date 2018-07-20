@@ -1,6 +1,6 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Add make directory.
+  Last Modified: Mkdir returns iRods ID. Add put. Rename method to cd_root.
 """
 __version__ = "0.0.2"
 __author__ = "Tom Hicks"
@@ -84,7 +84,7 @@ class IrodsHelper:
         if (self._cwdpath):
             self._cwdpath = self._cwdpath / subdir
 
-    def cd_home(self):
+    def cd_root(self):
         """ Reset the current working directory to the users top-level directory. """
         if (self._root):
             self._cwdpath = pl.PurePath(self._root)
@@ -112,8 +112,14 @@ class IrodsHelper:
             self._session = None
 
     def mkdir(self, subdir_name):
-        """ Make a directory (collection) with the given name at the current working directory. """
-        coll = self._session.collections.create(self._cwdpath / subdir_name)
+        """ Make a directory (collection) with the given name at the current working directory.
+            Returns the iRods ID of the collection.
+        """
+        return self._session.collections.create(self._cwdpath / subdir_name)
+
+    def put(self, file_path):
+        """ Upload the specified local file to the iRods current working directory. """
+        self._session.data_objects.put(file_path, self._cwdpath)
 
     def root(self):
         """ Return the user root directory as a string. """
@@ -140,4 +146,4 @@ class IrodsHelper:
             self._root = pl.PurePath("/", self._session.zone, home_dir, self._session.username, top_dir)
         else:
             self._root = None
-        self.cd_home()                      # reset home after changing root dir
+        self.cd_root()                      # reset home after changing root dir
