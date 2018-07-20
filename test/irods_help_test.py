@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Refactor files test to case..Add test for nested mkdir. Update for cd_root rename.
+#   Last Modified: Add put tests, which test get too.
 #
 import unittest
 from irods.session import iRODSSession
@@ -214,6 +214,40 @@ class FilesTestCase(IrodsHelpTestCase):
     self.helper.cd_down("testDir/test/tmp")    # move into new subdir
     cwd2 = self.helper.cwd()
     self.assertNotEqual(cwd1, cwd2)
+
+  def test_put_empty(self):
+    "Upload an empty file to iRods home directory"
+    filepath = "empty-metadata-keyfile.txt"
+    self.helper.put(filepath)               # the test call
+    objid = self.helper.get(filepath).id
+    self.assertNotEqual(objid, None)
+
+  def test_put_basic(self):
+    "Upload a test file to iRods home directory"
+    filepath = "context.py"
+    self.helper.put(filepath)               # the test call
+    objid = self.helper.get(filepath)
+    self.assertNotEqual(objid.id, None)
+
+  def test_cd_and_put(self):
+    "Upload a test file to iRods in a newly created nested directory"
+    filepath = "context.py"
+    dirpath = "testDir/test2"
+    self.helper.mkdir(dirpath)
+    self.helper.cd_down(dirpath)
+    self.helper.put(filepath)               # the test call
+    objid = self.helper.get(filepath)
+    self.assertNotEqual(objid.id, None)
+
+  def test_put_nested(self):
+    "Upload a test file to iRods in a newly created nested directory"
+    dirpath = "testDir/test2"
+    filename = "context.py"
+    filepath = "{}/{}".format(dirpath, filename)
+    self.helper.mkdir(dirpath)
+    self.helper.put(filename, to_dir=dirpath)     # the test call
+    objid = self.helper.get(filepath, absolute=True)
+    self.assertNotEqual(objid.id, None)
 
 
 if __name__ == "__main__":
