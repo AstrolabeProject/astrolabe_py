@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Add test for mkdir.
+#   Last Modified: Refactor files test to case..Add test for nested mkdir. Update for cd_root rename.
 #
 import unittest
 from irods.session import iRODSSession
@@ -13,6 +13,7 @@ def suite():
   suite = unittest.TestSuite()
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ConnectionsTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(MovementTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FilesTestCase))
   return suite
 
 
@@ -130,16 +131,6 @@ class MovementTestCase(IrodsHelpTestCase):
     self.assertNotEqual(cwd1, cwd2)
     self.assertEqual(cwd2, root2)
 
-  def test_set_mkdir(self):
-    "Make a new directory and move into it"
-    root1 = self.helper.root()
-    cwd1 = self.helper.cwd()
-    self.assertEqual(cwd1, root1)
-    self.helper.mkdir("testDir")            # the test call
-    self.helper.cd_down("testDir")          # move into new subdir
-    cwd2 = self.helper.cwd()
-    self.assertNotEqual(cwd1, cwd2)
-
   def test_cd_down(self):
     "Move down in the filesystem tree"
     # NB: CWD state is internal to the helper class and is not checked against the
@@ -168,27 +159,61 @@ class MovementTestCase(IrodsHelpTestCase):
     self.assertNotEqual(cwd1, cwd2)         # cwd changed from previous
     self.assertNotEqual(cwd2, root2)        # cwd changed from root
 
-  def test_cd_home_at_home(self):
-    "Calling cd_home at user home does nothing"
+  def test_cd_root_at_home(self):
+    "Calling cd_root at user home does nothing"
     root1 = self.helper.root()
     cwd1 = self.helper.cwd()
-    self.helper.cd_home()                   # the test call
+    self.helper.cd_root()                   # the test call
     root2 = self.helper.root()
     cwd2 = self.helper.cwd()
     self.assertEqual(root1, root2)          # root should be unchanged
     self.assertEqual(cwd1, cwd2)            # cwd should be unchanged
 
-  def test_cd_home(self):
+  def test_cd_root(self):
     "Move back to user home in the filesystem tree"
     self.helper.cd_down("xxx/yyy")          # "move down" in tree
     root1 = self.helper.root()
     cwd1 = self.helper.cwd()
     self.assertNotEqual(cwd1, root1)        # cwd now moved from root
-    self.helper.cd_home()                   # the test call
+    self.helper.cd_root()                   # the test call
     root2 = self.helper.root()
     cwd2 = self.helper.cwd()
     self.assertEqual(root2, root1)          # root should be unchanged
     self.assertEqual(cwd2, root1)           # cwd returned to same as root
+
+
+class FilesTestCase(IrodsHelpTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.helper = ih.IrodsHelper()          # create instance of class under test
+    self.helper.connect({})                 # no options
+    self.assertTrue(self.helper.is_connected())
+
+  def tearDown(self):
+    "Cleanup the test case"
+    self.helper.disconnect()
+
+
+  def test_set_mkdir(self):
+    "Make a new directory and move into it"
+    root1 = self.helper.root()
+    cwd1 = self.helper.cwd()
+    self.assertEqual(cwd1, root1)
+    id = self.helper.mkdir("testDir")       # the test call
+    self.helper.cd_down("testDir")          # move into new subdir
+    cwd2 = self.helper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
+
+  def test_set_mkdir2(self):
+    "Make multiple new directories and move to the bottom one"
+    root1 = self.helper.root()
+    cwd1 = self.helper.cwd()
+    self.assertEqual(cwd1, root1)
+    id = self.helper.mkdir("testDir/test/tmp") # the test call
+    self.helper.cd_down("testDir/test/tmp")    # move into new subdir
+    cwd2 = self.helper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
 
 
 if __name__ == "__main__":
