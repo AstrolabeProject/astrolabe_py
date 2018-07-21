@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add some tests for _handle_alternate_key.
+#   Last Modified: Update for ignoring of some keys.
 #
 import unittest
 from astropy.io import fits
@@ -27,7 +27,7 @@ class FitsOpsTestCase(unittest.TestCase):
   def setUpClass(cls):
     cls.default_options = {}
     cls.test_file = "cvnidwabcut.fits"
-    cls.test_file_md_count = 63
+    cls.test_file_md_count = 61             # HISTORY key excluded
 
 
 class HandleCtypeMappingTestCase(FitsOpsTestCase):

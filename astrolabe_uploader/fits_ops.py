@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Only add alternate keys to keys_subset if actually using keys_subset.
+#   Last Modified: Add a set of keys to ignore.
 #
 import os
 import sys
@@ -20,14 +20,17 @@ _ALTERNATE_KEYS_MAP = {
     "OBJECT": "obs_title"
 }
 
-# dictionary mapping CTYPE* key names to their associated CRVAL* key names.
+# dictionary mapping CTYPE* key names to their associated CRVAL* key names
 _CTYPES = { "CTYPE1": "CRVAL1",  "CTYPE2": "CRVAL2" }
+
+# set of metadata keys to ignore when extracting metadata from FITS files
+_IGNORE_KEYS = set([ "COMMENT", "HISTORY" ])
 
 
 def fits_metadata(file_path, options={}):
     """ Return a list Metadatum tuples extracted from the given FITS file. """
     keys_subset = options.get("keys_subset")
-    fm = FitsMeta(file_path)
+    fm = FitsMeta(file_path, ignore_keys=_IGNORE_KEYS)
     metadata = _post_process_metadata(fm, keys_subset)
     return metadata
 
