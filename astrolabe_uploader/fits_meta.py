@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Move filepath key constant back to module scope.
+  Last Modified: Add remove_by_keys method.
 """
 __version__ = "0.0.5"
 __author__ = "Tom Hicks"
@@ -31,7 +31,7 @@ def default_cleaner_fn(fld):
 class FitsMeta:
     """ Class to extract and format metadata from FITS files. """
 
-    def __init__(self, filepath, cleaner=default_cleaner_fn):
+    def __init__(self, filepath, cleaner=default_cleaner_fn, ignore_keys=None):
         self._filepath = filepath
         hdulist = fits.open(self._filepath) # raises error if unable to read file
         self._hdusinfo = hdulist.info(False) # get summary info for all HDUs
@@ -39,6 +39,8 @@ class FitsMeta:
         hdu0.verify('silentfix+ignore')     # fix fixable items in the first HDU
         self._metadata = self._extract_metadata(hdu0.header, cleaner)
         self._metadata.append(Metadatum(FILEPATH_KEY, self._filepath))
+        if (ignore_keys):
+            self._metadata = self.remove_by_keys(ignore_keys)
         self._update_key_set()              # compute initial set of metadata keys
         hdulist.close()                     # close the file
 
@@ -84,7 +86,7 @@ class FitsMeta:
         return self._filepath
 
     def filter_by_keys(self, keys):
-        """ Return a list of Metadatum items whose keys are in the metadata. """
+        """ Return a list of Metadatum items whose keys are in the given key set. """
         return list(filter(lambda item: item.keyword in set(keys), self._metadata))
 
     def get(self, keyword, not_found=None):
@@ -123,6 +125,10 @@ class FitsMeta:
     def metadata_as_json(self):
         """ Return the metadata items as JSON. """
         return json.dumps(self._metadata)
+
+    def remove_by_keys(self, keys):
+        """ Return a list of Metadatum items whose keys are NOT in the given key set. """
+        return list(filter(lambda item: item.keyword not in set(keys), self._metadata))
 
 
     def _extract_metadata(self, header, cleaner):

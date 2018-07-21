@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Add tests for returned copies, copy_item, and _update_key_set.
+#   Last Modified: Add tests for remove_by_keys.
 #
 import json
 import unittest
@@ -184,6 +184,56 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertEqual(type(fbk), list)
     self.assertEqual(len(fbk), 4)
     self.assertTrue(all([(item.keyword in keys) for item in fbk]))
+
+
+  def test_remove_by_keys_none(self):
+    "Filter metadata with empty key list should return full list"
+    fbk = self.fm.remove_by_keys([])
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), self.test_file_md_count)
+
+  def test_remove_by_keys_bad(self):
+    "Filter metadata with bogus keys list should return full list"
+    fbk = self.fm.remove_by_keys(["XXX", "YYY", "ZZZ"])
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), self.test_file_md_count)
+
+  def test_remove_by_keys_one(self):
+    "Filter metadata with singleton key list should return full list minus one"
+    fbk = self.fm.remove_by_keys(["NAXIS"])
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), self.test_file_md_count - 1)
+    self.assertFalse("NAXIS" in fbk[0].keyword)
+
+  def test_remove_by_keys_mult(self):
+    "Filter metadata with good keys list should return full list - good keys"
+    keys = ["BITPIX", "DATE"]
+    fbk = self.fm.remove_by_keys(keys)
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), self.test_file_md_count - 2)
+    self.assertTrue(all([(item.keyword not in keys) for item in fbk]))
+
+  def test_remove_by_keys_mixed(self):
+    "Filter metadata with mixed keys list should return full list - good keys"
+    keys = ["BITPIX", "NAXIS", "BOGUSKEY", "NAXIS2", "DATE", "badkey"]
+    fbk = self.fm.remove_by_keys(keys)
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), self.test_file_md_count - 4)
+    self.assertTrue(all([(item.keyword not in keys) for item in fbk]))
+
+  def test_remove_by_keys_dups(self):
+    "Filter metadata with non-unique keys list should return full list - duplicated keys"
+    keys = ["HISTORY"]                      # HISTORY keyword is repeated in test file
+    fbk = self.fm.remove_by_keys(keys)
+    self.assertNotEqual(fbk, None)
+    self.assertEqual(type(fbk), list)
+    self.assertEqual(len(fbk), self.test_file_md_count - 2)
+    self.assertTrue(all([(item.keyword not in keys) for item in fbk]))
 
 
   def test_default_cleaner(self):
