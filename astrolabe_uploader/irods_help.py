@@ -1,8 +1,8 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Add getc, getf, get_cwd, get_metaf, get_root.
+  Last Modified: Add tree walker.
 """
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 __author__ = "Tom Hicks"
 
 import os
@@ -115,7 +115,7 @@ class IrodsHelper:
             self._session.cleanup()
             self._session = None
 
-    def getc(self, dir_path=None, absolute=False):
+    def getc(self, dir_path, absolute=False):
         """ Get the specified directory relative to the iRods current working directory (default)
             OR relative to the users root directory, if the absolute argument is True.
         """
@@ -210,3 +210,12 @@ class IrodsHelper:
             return str(dir_path)
         else:
             return "{}/".format(dir_path)
+
+    def walk(self, topdown=True):
+        """ Collection tree generator. For each subcollection in the dir tree,
+            starting at the current working directory, yield a 3-tuple of
+            (self, self.subcollections, self.data_objects)
+        """
+        cwd = self.get_cwd()
+        if (cwd):
+            yield from cwd.walk(topdown=topdown)

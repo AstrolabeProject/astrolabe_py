@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Add tests for getc, get_cwd, getf, get_root. Update put tests for getf.
+#   Last Modified: Add tests for tree walker.
 #
 import unittest
 from irods.session import iRODSSession
@@ -15,6 +15,7 @@ def suite():
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ConnectionsTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(MovementTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FilesTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(WalkTestCase))
   return suite
 
 
@@ -265,12 +266,12 @@ class FilesTestCase(IrodsHelpTestCase):
     with self.assertRaises(DataObjectDoesNotExist):
       self.helper.getf("BAD_FILENAME", True)
 
-  def test_getc_bad_file_rel(self):
+  def test_getc_bad_dir_rel(self):
     "Throws exception on bad relative dirpath"
     with self.assertRaises(DataObjectDoesNotExist):
       self.helper.getf("BAD_DIRNAME")
 
-  def test_getc_bad_file_abs(self):
+  def test_getc_bad_dir_abs(self):
     "Throws exception on bad absolute dirpath"
     with self.assertRaises(DataObjectDoesNotExist):
       self.helper.getf("BAD_DIRNAME", True)
@@ -300,6 +301,117 @@ class FilesTestCase(IrodsHelpTestCase):
     dobj = self.helper.get_root()            # the test call
     self.assertNotEqual(dobj, None)
     self.assertEqual(dobj.path, root)
+
+
+class WalkTestCase(IrodsHelpTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.helper = ih.IrodsHelper()          # create instance of class under test
+    self.helper.connect({})                 # connect: no special options
+    self.assertTrue(self.helper.is_connected()) # sanity check: assert connected
+    filename = "context.py"                 # build a test directory tree
+    filename2 = "metadata-keys.txt"
+    self.helper.mkdir("test0/test1/test3")
+    self.helper.mkdir("test0/test1/test4")
+    self.helper.mkdir("test0/test2/test5")
+    self.helper.put(filename, to_dir="test0/test1")
+    self.helper.put(filename, to_dir="test0/test1/test3")
+    self.helper.put(filename, to_dir="test0/test2/test5")
+    self.helper.put(filename2, to_dir="test0/test2/test5")
+    self.helper.cd_down("test0")
+
+  def tearDown(self):
+    "Cleanup the test case"
+    self.helper.disconnect()
+
+
+  def test_walk_topdown(self):
+    """ Walk a directory tree in top-down order. """
+    walker = self.helper.walk()             # the test call
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test0") # dir
+    self.assertEqual(len(node[1]), 2)       # subdirs
+    self.assertEqual(len(node[2]), 0)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test1") # dir
+    self.assertEqual(len(node[1]), 2)       # subdirs
+    self.assertEqual(len(node[2]), 1)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test3") # dir
+    self.assertEqual(len(node[1]), 0)       # subdirs
+    self.assertEqual(len(node[2]), 1)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test4") # dir
+    self.assertEqual(len(node[1]), 0)       # subdirs
+    self.assertEqual(len(node[2]), 0)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test2") # dir
+    self.assertEqual(len(node[1]), 1)       # subdirs
+    self.assertEqual(len(node[2]), 0)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test5") # dir
+    self.assertEqual(len(node[1]), 0)       # subdirs
+    self.assertEqual(len(node[2]), 2)       # files
+
+    # for node in walker:
+    #   print("\nDIR: {}".format(node[0]))
+    #   print("SUBDIRS:")
+    #   for n in node[1]:
+    #     print("     {}".format(n))
+    #   print("FILES:")
+    #   for o in node[2]:
+    #     print("     {}".format(o))
+
+
+  def test_walk_bottomup(self):
+    """ Walk a directory tree in bottom-up order. """
+    walker = self.helper.walk(topdown=False) # the test call
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test3") # dir
+    self.assertEqual(len(node[1]), 0)       # subdirs
+    self.assertEqual(len(node[2]), 1)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test4") # dir
+    self.assertEqual(len(node[1]), 0)       # subdirs
+    self.assertEqual(len(node[2]), 0)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test1") # dir
+    self.assertEqual(len(node[1]), 2)       # subdirs
+    self.assertEqual(len(node[2]), 1)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test5") # dir
+    self.assertEqual(len(node[1]), 0)       # subdirs
+    self.assertEqual(len(node[2]), 2)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test2") # dir
+    self.assertEqual(len(node[1]), 1)       # subdirs
+    self.assertEqual(len(node[2]), 0)       # files
+
+    node = next(walker)
+    self.assertEqual(node[0].name, "test0") # dir
+    self.assertEqual(len(node[1]), 2)       # subdirs
+    self.assertEqual(len(node[2]), 0)       # files
+
+    # for node in walker:
+    #   print("\nDIR: {}".format(node[0]))
+    #   print("SUBDIRS:")
+    #   for n in node[1]:
+    #     print("     {}".format(n))
+    #   print("FILES:")
+    #   for o in node[2]:
+    #     print("     {}".format(o))
 
 
 if __name__ == "__main__":
