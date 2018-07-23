@@ -1,8 +1,8 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Mkdir returns iRods ID. Add put. Rename cd_root. Workout abs/rel path logic.
+  Last Modified: Add getc, getf, get_cwd, get_metaf, get_root.
 """
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __author__ = "Tom Hicks"
 
 import os
@@ -105,7 +105,7 @@ class IrodsHelper:
             self._cwdpath = None
 
     def cwd(self):
-        """ Return the current working directory as a string. """
+        """ Return the current working directory path as a string. """
         return str(self._cwdpath)
 
     def disconnect(self, options=None):
@@ -115,7 +115,21 @@ class IrodsHelper:
             self._session.cleanup()
             self._session = None
 
-    def get(self, file_path, absolute=False):
+    def getc(self, dir_path=None, absolute=False):
+        """ Get the specified directory relative to the iRods current working directory (default)
+            OR relative to the users root directory, if the absolute argument is True.
+        """
+        if (absolute):
+            dirpath = self.abs_path(dir_path) # path is relative to root dir
+        else:
+            dirpath = self.rel_path(dir_path) # path is relative to current working dir
+        return self._session.collections.get(dirpath)
+
+    def get_cwd(self):
+        """ Get directory information for the current working directory. """
+        return self._session.collections.get(self._cwdpath) if (self._cwdpath) else None
+
+    def getf(self, file_path, absolute=False):
         """ Get the specified local file relative to the iRods current working directory (default)
             OR relative to the users root directory, if the absolute argument is True.
         """
@@ -124,6 +138,22 @@ class IrodsHelper:
         else:
             filepath = self.rel_path(file_path) # path is relative to current working dir
         return self._session.data_objects.get(filepath)
+
+    def get_metaf(self, file_path, absolute=False):
+        """ Get the metadata for the specified local file relative to the iRods
+            current working directory (default) OR relative to the users root directory,
+            if the absolute argument is True.
+        """
+        if (absolute):
+            filepath = self.abs_path(file_path) # path is relative to root dir
+        else:
+            filepath = self.rel_path(file_path) # path is relative to current working dir
+        obj = self._session.data_objects.get(filepath)
+        return obj.metadata.items()
+
+    def get_root(self):
+        """ Get directory information for the users root directory. """
+        return self._session.collections.get(self._root)
 
     def mkdir(self, subdir_name):
         """ Make a directory (collection) with the given name at the current working directory.

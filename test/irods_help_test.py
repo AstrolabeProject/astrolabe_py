@@ -2,10 +2,11 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Add put tests, which test get too.
+#   Last Modified: Add tests for getc, get_cwd, getf, get_root. Update put tests for getf.
 #
 import unittest
 from irods.session import iRODSSession
+from irods.exception import DataObjectDoesNotExist
 
 from context import ih                      # the module under test
 
@@ -217,27 +218,30 @@ class FilesTestCase(IrodsHelpTestCase):
 
   def test_put_empty(self):
     "Upload an empty file to iRods home directory"
-    filepath = "empty-metadata-keyfile.txt"
-    self.helper.put(filepath)               # the test call
-    objid = self.helper.get(filepath).id
-    self.assertNotEqual(objid, None)
+    filename = "empty-metadata-keyfile.txt"
+    self.helper.put(filename)               # the test call
+    obj = self.helper.getf(filename)
+    self.assertNotEqual(obj, None)
+    self.assertEqual(obj.name, filename)
 
   def test_put_basic(self):
     "Upload a test file to iRods home directory"
-    filepath = "context.py"
-    self.helper.put(filepath)               # the test call
-    objid = self.helper.get(filepath)
-    self.assertNotEqual(objid.id, None)
+    filename = "context.py"
+    self.helper.put(filename)               # the test call
+    obj = self.helper.getf(filename)
+    self.assertNotEqual(obj, None)
+    self.assertEqual(obj.name, filename)
 
   def test_cd_and_put(self):
     "Upload a test file to iRods in a newly created nested directory"
-    filepath = "context.py"
+    filename = "context.py"
     dirpath = "testDir/test2"
     self.helper.mkdir(dirpath)
     self.helper.cd_down(dirpath)
-    self.helper.put(filepath)               # the test call
-    objid = self.helper.get(filepath)
-    self.assertNotEqual(objid.id, None)
+    self.helper.put(filename)               # the test call
+    obj = self.helper.getf(filename)
+    self.assertNotEqual(obj, None)
+    self.assertEqual(obj.name, filename)
 
   def test_put_nested(self):
     "Upload a test file to iRods in a newly created nested directory"
@@ -246,8 +250,56 @@ class FilesTestCase(IrodsHelpTestCase):
     filepath = "{}/{}".format(dirpath, filename)
     self.helper.mkdir(dirpath)
     self.helper.put(filename, to_dir=dirpath)     # the test call
-    objid = self.helper.get(filepath, absolute=True)
-    self.assertNotEqual(objid.id, None)
+    obj = self.helper.getf(filepath, absolute=True)
+    self.assertNotEqual(obj, None)
+    self.assertEqual(obj.name, filename)
+
+
+  def test_getf_bad_file_rel(self):
+    "Throws exception on bad relative filepath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.getf("BAD_FILENAME")
+
+  def test_getf_bad_file_abs(self):
+    "Throws exception on bad absolute filepath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.getf("BAD_FILENAME", True)
+
+  def test_getc_bad_file_rel(self):
+    "Throws exception on bad relative dirpath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.getf("BAD_DIRNAME")
+
+  def test_getc_bad_file_abs(self):
+    "Throws exception on bad absolute dirpath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.getf("BAD_DIRNAME", True)
+
+
+  def test_get_cwd(self):
+    """ Get dir info for the current working directory. """
+    pwd = self.helper.cwd()
+    dobj = self.helper.get_cwd()            # the test call
+    self.assertNotEqual(dobj, None)
+    self.assertEqual(dobj.path, pwd)
+
+  def test_get_cwd_subdir(self):
+    """ Get dir info for a subdirectory. """
+    dirpath = "testDir"
+    self.helper.mkdir(dirpath)
+    self.helper.cd_down(dirpath)
+    pwd = self.helper.cwd()
+    dobj = self.helper.get_cwd()            # the test call
+    self.assertNotEqual(dobj, None)
+    self.assertEqual(dobj.name, dirpath)
+    self.assertEqual(dobj.path, pwd)
+
+  def test_get_root(self):
+    """ Get dir info for the users root directory. """
+    root = self.helper.root()
+    dobj = self.helper.get_root()            # the test call
+    self.assertNotEqual(dobj, None)
+    self.assertEqual(dobj.path, root)
 
 
 if __name__ == "__main__":
