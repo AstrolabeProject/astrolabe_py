@@ -2,11 +2,10 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Rename main module. Move file/dir logic to uploader module.
+#   Last Modified: Move file filter to uploader.
 #
 import getopt
 import os
-import fnmatch
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -15,16 +14,6 @@ import astrolabe_uploader.uploader as up
 
 # Text file of desired metadata keys, one per line
 _DEFAULT_KEYS_FILE = "metadata-keys.txt"
-
-def filter_file_tree(root_dir):
-    """ Generator to yield all FITS files in the file tree under the given root directory. """
-    fits_pat = "*.fits"                     # pattern for identifying FITS files
-    gzfits_pat = "*.fits.gz"                # pattern for identifying gzipped FITS files
-    for root, dirs, files in os.walk(root_dir):
-        for fyl in files:
-            if (fnmatch.fnmatch(fyl, fits_pat) or fnmatch.fnmatch(fyl, gzfits_pat)):
-                file_path = os.path.join(root, fyl)
-                yield file_path
 
 def get_metadata_keys(options):
     """ Return a list of metadata keys to be extracted. """

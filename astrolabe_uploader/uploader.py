@@ -1,11 +1,12 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: WIP: Initial creation.
+#   Last Modified: Move file filter here.
 #
 import os
 import sys
 import logging
+import fnmatch
 
 import astrolabe_uploader.fits_ops as fo
 import astrolabe_uploader.irods_help as ih
@@ -23,6 +24,7 @@ def do_file(action, file_path, options):
     ihelper.connect(options)
     ensure_astrolabe_root(ihelper, options)
     ihelper.put(file_path)
+    # TODO: attach the metadata to the iRods file
 
 
 def do_tree(action, root_path, options):
@@ -36,6 +38,16 @@ def do_tree(action, root_path, options):
     # action_dispatch(action, fits_file, options)
     # action_cleanup(action, images_path, options)
 
+
+def filter_file_tree(root_dir):
+    """ Generator to yield all FITS files in the file tree under the given root directory. """
+    fits_pat = "*.fits"                     # pattern for identifying FITS files
+    gzfits_pat = "*.fits.gz"                # pattern for identifying gzipped FITS files
+    for root, dirs, files in os.walk(root_dir):
+        for fyl in files:
+            if (fnmatch.fnmatch(fyl, fits_pat) or fnmatch.fnmatch(fyl, gzfits_pat)):
+                file_path = os.path.join(root, fyl)
+                yield file_path
 
 def ensure_astrolabe_root(ihelper, options):
     """ Ensure that the Astrolabe root directory exists and set it as the user's root directory. """
