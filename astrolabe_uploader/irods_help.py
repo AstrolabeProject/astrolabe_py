@@ -1,8 +1,8 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Add tree walker.
+  Last Modified: Add get_metac, simplify get_metaf.
 """
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 __author__ = "Tom Hicks"
 
 import os
@@ -139,16 +139,20 @@ class IrodsHelper:
             filepath = self.rel_path(file_path) # path is relative to current working dir
         return self._session.data_objects.get(filepath)
 
+    def get_metac(self, dir_path, absolute=False):
+        """ Get the metadata for the specified directory relative to the iRods
+            current working directory (default) OR relative to the users root directory,
+            if the absolute argument is True.
+        """
+        dirobj = self.getc(dir_path, absolute=absolute)
+        return dirobj.metadata.items()
+
     def get_metaf(self, file_path, absolute=False):
         """ Get the metadata for the specified local file relative to the iRods
             current working directory (default) OR relative to the users root directory,
             if the absolute argument is True.
         """
-        if (absolute):
-            filepath = self.abs_path(file_path) # path is relative to root dir
-        else:
-            filepath = self.rel_path(file_path) # path is relative to current working dir
-        obj = self._session.data_objects.get(filepath)
+        obj = self.getf(file_path, absolute=absolute)
         return obj.metadata.items()
 
     def get_root(self):

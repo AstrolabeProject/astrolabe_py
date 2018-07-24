@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Fix getc bad dir tests.
+#   Last Modified: Add tests for get_metac, get_metaf.
 #
 import unittest
 from irods.session import iRODSSession
@@ -217,6 +217,28 @@ class FilesTestCase(IrodsHelpTestCase):
     cwd2 = self.helper.cwd()
     self.assertNotEqual(cwd1, cwd2)
 
+
+  def test_getf_bad_file_rel(self):
+    "Throws exception on bad relative filepath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.getf("BAD_FILENAME")
+
+  def test_getf_bad_file_abs(self):
+    "Throws exception on bad absolute filepath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.getf("BAD_FILENAME", True)
+
+  def test_getc_bad_dir_rel(self):
+    "Throws exception on bad relative dirpath"
+    with self.assertRaises(CollectionDoesNotExist):
+      self.helper.getc("BAD_DIRNAME")
+
+  def test_getc_bad_dir_abs(self):
+    "Throws exception on bad absolute dirpath"
+    with self.assertRaises(CollectionDoesNotExist):
+      self.helper.getc("BAD_DIRNAME", True)
+
+
   def test_put_empty(self):
     "Upload an empty file to iRods home directory"
     filename = "empty-metadata-keyfile.txt"
@@ -233,7 +255,7 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(obj, None)
     self.assertEqual(obj.name, filename)
 
-  def test_cd_and_put(self):
+  def test_put_after_cd(self):
     "Upload a test file to iRods in a newly created nested directory"
     filename = "context.py"
     dirpath = "testDir/test2"
@@ -256,25 +278,58 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertEqual(obj.name, filename)
 
 
-  def test_getf_bad_file_rel(self):
-    "Throws exception on bad relative filepath"
-    with self.assertRaises(DataObjectDoesNotExist):
-      self.helper.getf("BAD_FILENAME")
-
-  def test_getf_bad_file_abs(self):
-    "Throws exception on bad absolute filepath"
-    with self.assertRaises(DataObjectDoesNotExist):
-      self.helper.getf("BAD_FILENAME", True)
-
-  def test_getc_bad_dir_rel(self):
+  def test_get_metac_bad_dir_rel(self):
     "Throws exception on bad relative dirpath"
     with self.assertRaises(CollectionDoesNotExist):
-      self.helper.getc("BAD_DIRNAME")
+      self.helper.get_metac("BAD_DIRNAME")
 
-  def test_getc_bad_dir_abs(self):
+  def test_get_metac_bad_dir_abs(self):
     "Throws exception on bad absolute dirpath"
     with self.assertRaises(CollectionDoesNotExist):
-      self.helper.getc("BAD_DIRNAME", True)
+      self.helper.get_metac("BAD_DIRNAME", True)
+
+  def test_get_metac(self):
+    "Make a directory and then get metadata for it"
+    dirpath = "testDir"
+    self.helper.mkdir(dirpath)
+    md = self.helper.get_metac(dirpath)
+    self.assertNotEqual(md, None)
+    self.assertEqual(type(md), list)
+    self.assertTrue(len(md) > 0)
+
+  def test_get_metaf_bad_file_rel(self):
+    "Throws exception on bad relative filepath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.get_metaf("BAD_FILENAME")
+
+  def test_get_metaf_bad_file_abs(self):
+    "Throws exception on bad absolute filepath"
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.get_metaf("BAD_FILENAME", True)
+
+  def test_get_metaf_abs(self):
+    "Put a file and then get metadata for it using absolute path"
+    dirpath = "testDir"
+    filename = "context.py"
+    filepath = "{}/{}".format(dirpath, filename)
+    self.helper.mkdir(dirpath)
+    self.helper.put(filename, dirpath)
+    md = self.helper.get_metaf(filepath, absolute=True) # the test call
+    self.assertNotEqual(md, None)
+    self.assertEqual(type(md), list)
+    self.assertTrue(len(md) > 0)
+
+  def test_get_metaf_rel(self):
+    "Put a file and then get metadata for it using relative path"
+    dirpath = "testDir"
+    filename = "context.py"
+    self.helper.mkdir(dirpath)
+    self.helper.cd_down(dirpath)
+    self.helper.put(filename)
+    md = self.helper.get_metaf(filename)    # the test call
+    self.assertNotEqual(md, None)
+    self.assertEqual(type(md), list)
+    self.assertTrue(len(md) > 0)
 
 
   def test_get_cwd(self):
