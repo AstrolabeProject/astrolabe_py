@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Add tests for get_metac, get_metaf.
+#   Last Modified: Add one test for put_metaf. Rename empty file.
 #
 import unittest
 from irods.session import iRODSSession
@@ -15,7 +15,8 @@ def suite():
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(ConnectionsTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(MovementTestCase))
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FilesTestCase))
-  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(WalkTestCase))
+  # Tests in the following TestCase take about 15 seconds each to run:
+  # suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(WalkTestCase))
   return suite
 
 
@@ -241,7 +242,7 @@ class FilesTestCase(IrodsHelpTestCase):
 
   def test_put_empty(self):
     "Upload an empty file to iRods home directory"
-    filename = "empty-metadata-keyfile.txt"
+    filename = "empty.txt"
     self.helper.put(filename)               # the test call
     obj = self.helper.getf(filename)
     self.assertNotEqual(obj, None)
@@ -330,6 +331,36 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
     self.assertTrue(len(md) > 0)
+
+
+  def test_put_metaf_rel(self):
+    "Create a file and then put metadata on it using a relative path"
+    dirpath = "testDir"
+    filename = "context.py"
+    mdata = [ ("Key1", "Value1"), ("KEY2", "VALUE2"), ("BIG_KEY3", "Three of Hearts") ]
+    mdata2 = [ ("Key1", "NewValue1"), ("KEY2", "NEW_VALUE2"), ("BIG_KEY3", "NO TRUMP") ]
+    self.helper.mkdir(dirpath)
+    self.helper.cd_down(dirpath)
+    self.helper.put(filename)
+    md0 = self.helper.get_metaf(filename)
+    # print("\nMD0=", *md0, sep="\n")
+
+    self.helper.put_metaf(filename, mdata)  # the test call
+    md1 = self.helper.get_metaf(filename)
+    # print("\nMD1=", *md1, sep="\n")
+    self.assertNotEqual(md1, None)
+    self.assertEqual(type(md1), list)
+    self.assertTrue(len(md1) > len(mdata))
+    self.assertNotEqual(md0, md1)
+
+    self.helper.put_metaf(filename, mdata2)  # the test call
+    md2 = self.helper.get_metaf(filename)
+    # print("\nMD2=", *md2, sep="\n")
+    self.assertNotEqual(md2, None)
+    self.assertEqual(type(md2), list)
+    self.assertTrue(len(md2) > len(mdata2))
+    self.assertNotEqual(md1, md2)
+    self.assertEqual(len(md1), len(md2))
 
 
   def test_get_cwd(self):

@@ -1,8 +1,8 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Add get_metac, simplify get_metaf.
+  Last Modified: Add put_metaf.
 """
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 __author__ = "Tom Hicks"
 
 import os
@@ -130,7 +130,7 @@ class IrodsHelper:
         return self._session.collections.get(self._cwdpath) if (self._cwdpath) else None
 
     def getf(self, file_path, absolute=False):
-        """ Get the specified local file relative to the iRods current working directory (default)
+        """ Get the specified file relative to the iRods current working directory (default)
             OR relative to the users root directory, if the absolute argument is True.
         """
         if (absolute):
@@ -148,7 +148,7 @@ class IrodsHelper:
         return dirobj.metadata.items()
 
     def get_metaf(self, file_path, absolute=False):
-        """ Get the metadata for the specified local file relative to the iRods
+        """ Get the metadata for the specified file relative to the iRods
             current working directory (default) OR relative to the users root directory,
             if the absolute argument is True.
         """
@@ -173,6 +173,19 @@ class IrodsHelper:
         if (to_dir):                           # if alternate directory path specified
             target_dir = self.abs_path(to_dir) # then dir path is relative to users root dir
         self._session.data_objects.put(local_file, self.to_dirpath(target_dir))
+
+    def put_metaf(self, file_path, metadata, absolute=False):
+        """ Attach the given metadata on the file specified relative to the iRods
+            current working directory (default) OR relative to the users root directory,
+            if the absolute argument is True.
+        """
+        obj = self.getf(file_path, absolute=absolute)
+        keys = [item[0] for item in metadata]
+        for key in keys:
+            del(obj.metadata[key])
+        for item in metadata:
+            obj.metadata.add(item[0], item[1])
+        return len(metadata)
 
     def rel_path(self, path):
         """ Return an iRods path for the given path relative to the current working directory. """
