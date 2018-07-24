@@ -1,8 +1,8 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Add put_metaf.
+  Last Modified: Rename method to put_file.
 """
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 __author__ = "Tom Hicks"
 
 import os
@@ -165,7 +165,7 @@ class IrodsHelper:
         """
         return self._session.collections.create(self.rel_path(subdir_name))
 
-    def put(self, local_file, to_dir=None):
+    def put_file(self, local_file, to_dir=None):
         """ Upload the specified local file to the iRods current working directory (default) or
             to a directory specified by the 'to_dir' argument.
         """

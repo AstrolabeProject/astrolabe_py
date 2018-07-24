@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Add one test for put_metaf. Rename empty file.
+#   Last Modified: Update for rename to put_file. Add more put_metaf tests.
 #
 import unittest
 from irods.session import iRODSSession
@@ -89,15 +89,6 @@ class ConnectionsTestCase(IrodsHelpTestCase):
 
 
 class MovementTestCase(IrodsHelpTestCase):
-
-  # @classmethod
-  # def setUpClass(cls):
-  #   "Create some special test subdirectories, just for tests in this class"
-  #   helper = ih.IrodsHelper()
-  #   helper.connect({})                      # no options
-  #   new_dir_path = "{}/test/tstsubdir".format(helper.root())
-  #   new_dirs = helper.session().collections.create(new_dir_path)
-  #   helper.disconnect()
 
   def setUp(self):
     "Initialize the test case"
@@ -240,43 +231,69 @@ class FilesTestCase(IrodsHelpTestCase):
       self.helper.getc("BAD_DIRNAME", True)
 
 
+  def test_get_cwd(self):
+    """ Get dir info for the current working directory. """
+    pwd = self.helper.cwd()
+    dobj = self.helper.get_cwd()            # the test call
+    self.assertNotEqual(dobj, None)
+    self.assertEqual(dobj.path, pwd)
+
+  def test_get_cwd_subdir(self):
+    """ Get dir info for a subdirectory. """
+    dirpath = "testDir"
+    self.helper.mkdir(dirpath)
+    self.helper.cd_down(dirpath)
+    pwd = self.helper.cwd()
+    dobj = self.helper.get_cwd()            # the test call
+    self.assertNotEqual(dobj, None)
+    self.assertEqual(dobj.name, dirpath)
+    self.assertEqual(dobj.path, pwd)
+
+  def test_get_root(self):
+    """ Get dir info for the users root directory. """
+    root = self.helper.root()
+    dobj = self.helper.get_root()            # the test call
+    self.assertNotEqual(dobj, None)
+    self.assertEqual(dobj.path, root)
+
+
   def test_put_empty(self):
     "Upload an empty file to iRods home directory"
-    filename = "empty.txt"
-    self.helper.put(filename)               # the test call
-    obj = self.helper.getf(filename)
+    upfile = "empty.txt"
+    self.helper.put_file(upfile)            # the test call
+    obj = self.helper.getf(upfile)
     self.assertNotEqual(obj, None)
-    self.assertEqual(obj.name, filename)
+    self.assertEqual(obj.name, upfile)
 
   def test_put_basic(self):
     "Upload a test file to iRods home directory"
-    filename = "context.py"
-    self.helper.put(filename)               # the test call
-    obj = self.helper.getf(filename)
+    upfile = "context.py"
+    self.helper.put_file(upfile)            # the test call
+    obj = self.helper.getf(upfile)
     self.assertNotEqual(obj, None)
-    self.assertEqual(obj.name, filename)
+    self.assertEqual(obj.name, upfile)
 
   def test_put_after_cd(self):
     "Upload a test file to iRods in a newly created nested directory"
-    filename = "context.py"
+    upfile = "context.py"
     dirpath = "testDir/test2"
     self.helper.mkdir(dirpath)
     self.helper.cd_down(dirpath)
-    self.helper.put(filename)               # the test call
-    obj = self.helper.getf(filename)
+    self.helper.put_file(upfile)            # the test call
+    obj = self.helper.getf(upfile)
     self.assertNotEqual(obj, None)
-    self.assertEqual(obj.name, filename)
+    self.assertEqual(obj.name, upfile)
 
   def test_put_nested(self):
     "Upload a test file to iRods in a newly created nested directory"
     dirpath = "testDir/test2"
-    filename = "context.py"
-    filepath = "{}/{}".format(dirpath, filename)
+    upfile = "context.py"
+    filepath = "{}/{}".format(dirpath, upfile)
     self.helper.mkdir(dirpath)
-    self.helper.put(filename, to_dir=dirpath)     # the test call
+    self.helper.put_file(upfile, dirpath)   # the test call
     obj = self.helper.getf(filepath, absolute=True)
     self.assertNotEqual(obj, None)
-    self.assertEqual(obj.name, filename)
+    self.assertEqual(obj.name, upfile)
 
 
   def test_get_metac_bad_dir_rel(self):
@@ -311,10 +328,10 @@ class FilesTestCase(IrodsHelpTestCase):
   def test_get_metaf_abs(self):
     "Put a file and then get metadata for it using absolute path"
     dirpath = "testDir"
-    filename = "context.py"
-    filepath = "{}/{}".format(dirpath, filename)
+    upfile = "context.py"
+    filepath = "{}/{}".format(dirpath, upfile)
     self.helper.mkdir(dirpath)
-    self.helper.put(filename, dirpath)
+    self.helper.put_file(upfile, dirpath)
     md = self.helper.get_metaf(filepath, absolute=True) # the test call
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
@@ -323,38 +340,71 @@ class FilesTestCase(IrodsHelpTestCase):
   def test_get_metaf_rel(self):
     "Put a file and then get metadata for it using relative path"
     dirpath = "testDir"
-    filename = "context.py"
+    upfile = "context.py"
     self.helper.mkdir(dirpath)
     self.helper.cd_down(dirpath)
-    self.helper.put(filename)
-    md = self.helper.get_metaf(filename)    # the test call
+    self.helper.put_file(upfile)
+    md = self.helper.get_metaf(upfile)    # the test call
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
     self.assertTrue(len(md) > 0)
 
 
+  def test_put_metaf_bad_file_rel(self):
+    "Throws exception on bad relative filepath"
+    mdata = [("Key1", "Value1")]
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.put_metaf("BAD_FILENAME", mdata)
+
+  def test_put_metaf_bad_file_abs(self):
+    "Throws exception on bad absolute filepath"
+    mdata = [("Key1", "Value1")]
+    with self.assertRaises(DataObjectDoesNotExist):
+      self.helper.put_metaf("BAD_FILENAME", mdata, True)
+
+  def test_put_metaf_none(self):
+    "Create a file and then put empty metadata on it"
+    dirpath = "testDir"
+    upfile = "empty.txt"
+    mdata = []
+    self.helper.mkdir(dirpath)
+    self.helper.cd_down(dirpath)
+    self.helper.put_file(upfile)
+    md0 = self.helper.get_metaf(upfile)
+    self.assertNotEqual(md0, None)
+    self.assertEqual(type(md0), list)
+    # print("\nMD0=", *md0, sep="\n")
+
+    self.helper.put_metaf(upfile, mdata)    # the test call
+    md1 = self.helper.get_metaf(upfile)
+    # print("\nMD1=", *md1, sep="\n")
+    self.assertNotEqual(md1, None)
+    self.assertEqual(type(md1), list)
+    self.assertTrue(len(md1) > len(mdata))
+    self.assertEqual(len(md0), len(md1))
+
   def test_put_metaf_rel(self):
     "Create a file and then put metadata on it using a relative path"
     dirpath = "testDir"
-    filename = "context.py"
+    upfile = "context.py"
     mdata = [ ("Key1", "Value1"), ("KEY2", "VALUE2"), ("BIG_KEY3", "Three of Hearts") ]
     mdata2 = [ ("Key1", "NewValue1"), ("KEY2", "NEW_VALUE2"), ("BIG_KEY3", "NO TRUMP") ]
     self.helper.mkdir(dirpath)
     self.helper.cd_down(dirpath)
-    self.helper.put(filename)
-    md0 = self.helper.get_metaf(filename)
+    self.helper.put_file(upfile)
+    md0 = self.helper.get_metaf(upfile)
     # print("\nMD0=", *md0, sep="\n")
 
-    self.helper.put_metaf(filename, mdata)  # the test call
-    md1 = self.helper.get_metaf(filename)
+    self.helper.put_metaf(upfile, mdata)  # the test call
+    md1 = self.helper.get_metaf(upfile)
     # print("\nMD1=", *md1, sep="\n")
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
     self.assertNotEqual(md0, md1)
 
-    self.helper.put_metaf(filename, mdata2)  # the test call
-    md2 = self.helper.get_metaf(filename)
+    self.helper.put_metaf(upfile, mdata2)  # the test call
+    md2 = self.helper.get_metaf(upfile)
     # print("\nMD2=", *md2, sep="\n")
     self.assertNotEqual(md2, None)
     self.assertEqual(type(md2), list)
@@ -362,31 +412,63 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(md1, md2)
     self.assertEqual(len(md1), len(md2))
 
+  def test_put_metaf_abs(self):
+    "Create a file and then put metadata on it using an absolute path"
+    dirpath = "testDir/test"
+    upfile = "context.py"
+    filepath = "{}/{}".format(dirpath, upfile)
+    mdata = [ ("Key1", "Value1"), ("KEY2", "VALUE2"), ("BIG_KEY3", "Three of Hearts") ]
+    mdata2 = [ ("Key1", "NewValue1"), ("KEY2", "NEW_VALUE2"), ("BIG_KEY3", "NO TRUMP") ]
+    self.helper.cd_root()
+    self.helper.mkdir(dirpath)
+    self.helper.put_file(upfile, dirpath)
+    md0 = self.helper.get_metaf(filepath, absolute=True)
+    # print("\nMD0=", *md0, sep="\n")
 
-  def test_get_cwd(self):
-    """ Get dir info for the current working directory. """
-    pwd = self.helper.cwd()
-    dobj = self.helper.get_cwd()            # the test call
-    self.assertNotEqual(dobj, None)
-    self.assertEqual(dobj.path, pwd)
+    self.helper.put_metaf(filepath, mdata, absolute=True)  # the test call
+    md1 = self.helper.get_metaf(filepath, absolute=True)
+    # print("\nMD1=", *md1, sep="\n")
+    self.assertNotEqual(md1, None)
+    self.assertEqual(type(md1), list)
+    self.assertTrue(len(md1) > len(mdata))
+    self.assertNotEqual(md0, md1)
 
-  def test_get_cwd_subdir(self):
-    """ Get dir info for a subdirectory. """
+    self.helper.put_metaf(filepath, mdata2, absolute=True)  # the test call
+    md2 = self.helper.get_metaf(filepath, absolute=True)
+    # print("\nMD2=", *md2, sep="\n")
+    self.assertNotEqual(md2, None)
+    self.assertEqual(type(md2), list)
+    self.assertTrue(len(md2) > len(mdata2))
+    self.assertNotEqual(md1, md2)
+    self.assertEqual(len(md1), len(md2))
+
+  def test_put_metaf_multi(self):
+    "Create a file and then replace old and put new metadata on it"
     dirpath = "testDir"
+    upfile = "empty.txt"
+    mdata = [ ("Key1", "Value1"), ("KEY2", "Value2"), ("KEY2", "Two Many") ]
+    mdata2 = [ ("Key1", "NewVal1"), ("KEY2", "Only2"), ("KEY3", "333"), ("KEY3", "THREE") ]
     self.helper.mkdir(dirpath)
     self.helper.cd_down(dirpath)
-    pwd = self.helper.cwd()
-    dobj = self.helper.get_cwd()            # the test call
-    self.assertNotEqual(dobj, None)
-    self.assertEqual(dobj.name, dirpath)
-    self.assertEqual(dobj.path, pwd)
+    self.helper.put_file(upfile)
+    md0 = self.helper.get_metaf(upfile)
+    # print("\nMD0=", *md0, sep="\n")
 
-  def test_get_root(self):
-    """ Get dir info for the users root directory. """
-    root = self.helper.root()
-    dobj = self.helper.get_root()            # the test call
-    self.assertNotEqual(dobj, None)
-    self.assertEqual(dobj.path, root)
+    self.helper.put_metaf(upfile, mdata)  # the test call
+    md1 = self.helper.get_metaf(upfile)
+    # print("\nMD1=", *md1, sep="\n")
+    self.assertNotEqual(md1, None)
+    self.assertEqual(type(md1), list)
+    self.assertTrue(len(md1) > len(mdata))
+    self.assertNotEqual(md0, md1)
+
+    self.helper.put_metaf(upfile, mdata2)  # the test call
+    md2 = self.helper.get_metaf(upfile)
+    # print("\nMD2=", *md2, sep="\n")
+    self.assertNotEqual(md2, None)
+    self.assertEqual(type(md2), list)
+    self.assertTrue(len(md2) > len(mdata2))
+    self.assertNotEqual(md1, md2)
 
 
 class WalkTestCase(IrodsHelpTestCase):
@@ -396,15 +478,15 @@ class WalkTestCase(IrodsHelpTestCase):
     self.helper = ih.IrodsHelper()          # create instance of class under test
     self.helper.connect({})                 # connect: no special options
     self.assertTrue(self.helper.is_connected()) # sanity check: assert connected
-    filename = "context.py"                 # build a test directory tree
-    filename2 = "metadata-keys.txt"
+    upfile = "context.py"                 # build a test directory tree
+    upfile2 = "metadata-keys.txt"
     self.helper.mkdir("test0/test1/test3")
     self.helper.mkdir("test0/test1/test4")
     self.helper.mkdir("test0/test2/test5")
-    self.helper.put(filename, to_dir="test0/test1")
-    self.helper.put(filename, to_dir="test0/test1/test3")
-    self.helper.put(filename, to_dir="test0/test2/test5")
-    self.helper.put(filename2, to_dir="test0/test2/test5")
+    self.helper.put_file(upfile, "test0/test1")
+    self.helper.put_file(upfile, "test0/test1/test3")
+    self.helper.put_file(upfile, "test0/test2/test5")
+    self.helper.put_file(upfile2, "test0/test2/test5")
     self.helper.cd_down("test0")
 
   def tearDown(self):
