@@ -2,11 +2,11 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Add tests for tree walker.
+#   Last Modified: Fix getc bad dir tests.
 #
 import unittest
 from irods.session import iRODSSession
-from irods.exception import DataObjectDoesNotExist
+from irods.exception import CollectionDoesNotExist, DataObjectDoesNotExist
 
 from context import ih                      # the module under test
 
@@ -268,13 +268,13 @@ class FilesTestCase(IrodsHelpTestCase):
 
   def test_getc_bad_dir_rel(self):
     "Throws exception on bad relative dirpath"
-    with self.assertRaises(DataObjectDoesNotExist):
-      self.helper.getf("BAD_DIRNAME")
+    with self.assertRaises(CollectionDoesNotExist):
+      self.helper.getc("BAD_DIRNAME")
 
   def test_getc_bad_dir_abs(self):
     "Throws exception on bad absolute dirpath"
-    with self.assertRaises(DataObjectDoesNotExist):
-      self.helper.getf("BAD_DIRNAME", True)
+    with self.assertRaises(CollectionDoesNotExist):
+      self.helper.getc("BAD_DIRNAME", True)
 
 
   def test_get_cwd(self):
