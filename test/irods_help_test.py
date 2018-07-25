@@ -2,7 +2,8 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Update for rename to put_file. Add more put_metaf tests.
+#   Last Modified: Update tests for put_metaf returning new metadata item count.
+#                  Add test case for delete* methods.
 #
 import unittest
 from irods.session import iRODSSession
@@ -17,6 +18,8 @@ def suite():
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FilesTestCase))
   # Tests in the following TestCase take about 15 seconds each to run:
   # suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(WalkTestCase))
+  # Tests in the following TestCase take about 5 minutes each to run:
+  # suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(DeleteTestCase))
   return suite
 
 
@@ -186,6 +189,11 @@ class FilesTestCase(IrodsHelpTestCase):
 
   def tearDown(self):
     "Cleanup the test case"
+    self.helper.cd_root()                   # reset root
+    # self.helper.delete_file("context.py")
+    # self.helper.delete_file("empty.txt")
+    # self.helper.delete_dir("testDir", force=True)
+    # self.helper.delete_dir("test", force=True)
     self.helper.disconnect()
 
 
@@ -375,13 +383,14 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertEqual(type(md0), list)
     # print("\nMD0=", *md0, sep="\n")
 
-    self.helper.put_metaf(upfile, mdata)    # the test call
+    cnt1 = self.helper.put_metaf(upfile, mdata) # the test call
     md1 = self.helper.get_metaf(upfile)
     # print("\nMD1=", *md1, sep="\n")
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
     self.assertEqual(len(md0), len(md1))
+    self.assertEqual(len(md0), cnt1)
 
   def test_put_metaf_rel(self):
     "Create a file and then put metadata on it using a relative path"
@@ -395,15 +404,16 @@ class FilesTestCase(IrodsHelpTestCase):
     md0 = self.helper.get_metaf(upfile)
     # print("\nMD0=", *md0, sep="\n")
 
-    self.helper.put_metaf(upfile, mdata)  # the test call
+    cnt1 = self.helper.put_metaf(upfile, mdata) # the test call
     md1 = self.helper.get_metaf(upfile)
     # print("\nMD1=", *md1, sep="\n")
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
     self.assertNotEqual(md0, md1)
+    self.assertEqual(len(md1), cnt1)
 
-    self.helper.put_metaf(upfile, mdata2)  # the test call
+    cnt2 = self.helper.put_metaf(upfile, mdata2) # the test call
     md2 = self.helper.get_metaf(upfile)
     # print("\nMD2=", *md2, sep="\n")
     self.assertNotEqual(md2, None)
@@ -411,6 +421,7 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertTrue(len(md2) > len(mdata2))
     self.assertNotEqual(md1, md2)
     self.assertEqual(len(md1), len(md2))
+    self.assertEqual(len(md2), cnt2)
 
   def test_put_metaf_abs(self):
     "Create a file and then put metadata on it using an absolute path"
@@ -425,22 +436,23 @@ class FilesTestCase(IrodsHelpTestCase):
     md0 = self.helper.get_metaf(filepath, absolute=True)
     # print("\nMD0=", *md0, sep="\n")
 
-    self.helper.put_metaf(filepath, mdata, absolute=True)  # the test call
+    cnt1 = self.helper.put_metaf(filepath, mdata, absolute=True) # the test call
     md1 = self.helper.get_metaf(filepath, absolute=True)
     # print("\nMD1=", *md1, sep="\n")
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
     self.assertNotEqual(md0, md1)
+    self.assertEqual(len(md1), cnt1)
 
-    self.helper.put_metaf(filepath, mdata2, absolute=True)  # the test call
+    cnt2 = self.helper.put_metaf(filepath, mdata2, absolute=True) # the test call
     md2 = self.helper.get_metaf(filepath, absolute=True)
     # print("\nMD2=", *md2, sep="\n")
     self.assertNotEqual(md2, None)
     self.assertEqual(type(md2), list)
     self.assertTrue(len(md2) > len(mdata2))
     self.assertNotEqual(md1, md2)
-    self.assertEqual(len(md1), len(md2))
+    self.assertEqual(len(md2), cnt2)
 
   def test_put_metaf_multi(self):
     "Create a file and then replace old and put new metadata on it"
@@ -454,21 +466,23 @@ class FilesTestCase(IrodsHelpTestCase):
     md0 = self.helper.get_metaf(upfile)
     # print("\nMD0=", *md0, sep="\n")
 
-    self.helper.put_metaf(upfile, mdata)  # the test call
+    cnt1 = self.helper.put_metaf(upfile, mdata) # the test call
     md1 = self.helper.get_metaf(upfile)
     # print("\nMD1=", *md1, sep="\n")
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
     self.assertNotEqual(md0, md1)
+    self.assertEqual(len(md1), cnt1)
 
-    self.helper.put_metaf(upfile, mdata2)  # the test call
+    cnt2 = self.helper.put_metaf(upfile, mdata2) # the test call
     md2 = self.helper.get_metaf(upfile)
     # print("\nMD2=", *md2, sep="\n")
     self.assertNotEqual(md2, None)
     self.assertEqual(type(md2), list)
     self.assertTrue(len(md2) > len(mdata2))
     self.assertNotEqual(md1, md2)
+    self.assertEqual(len(md2), cnt2)
 
 
 class WalkTestCase(IrodsHelpTestCase):
@@ -580,6 +594,61 @@ class WalkTestCase(IrodsHelpTestCase):
     #   print("FILES:")
     #   for o in node[2]:
     #     print("     {}".format(o))
+
+
+class DeleteTestCase(IrodsHelpTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.helper = ih.IrodsHelper()          # create instance of class under test
+    self.helper.connect({})                 # connect: no special options
+    self.assertTrue(self.helper.is_connected()) # sanity check: assert connected
+
+  def test_delete_files(self):
+    "Create and delete files in directories and subdirectories. WARNING: test takes forever!"
+    upfile1 = "context.py"
+    upfile2 = "empty.txt"
+    testdir = "testDir"
+    testdir2 = "test/test1/test"
+    self.helper.mkdir(testdir)
+    self.helper.mkdir(testdir2)
+    self.helper.put_file(upfile1)
+    self.helper.put_file(upfile2)
+    self.helper.put_file(upfile1, testdir)
+    self.helper.put_file(upfile2, testdir)
+    self.helper.put_file(upfile1, testdir2)
+
+    self.assertTrue(self.helper.delete_file(upfile1))
+    self.assertTrue(self.helper.delete_file(upfile2))
+    self.assertTrue(self.helper.delete_file("{}/{}".format(testdir, upfile1)))
+    self.assertTrue(self.helper.delete_file("{}/{}".format(testdir, upfile2)))
+    self.assertTrue(self.helper.delete_file("{}/{}".format(testdir2, upfile1)))
+
+  def test_delete_dirs(self):
+    "Create and delete directories and subdirectories. WARNING: test takes forever!"
+    testdirs = [
+      "testDir",
+      "test/test1/test2/test4",
+      "test/test1/test2",
+      "test/test1",
+      "test",
+    ]
+    for td in testdirs:
+      self.helper.mkdir(td)
+    deletes = [self.helper.delete_dir(td) for td in testdirs]
+    self.assertTrue(all(deletes))
+
+  def test_delete_dirs_recurse(self):
+    "Delete directories works recursively. WARNING: test takes forever!"
+    testdirs = [
+      "test",
+      "test/test1/test2/test4"
+    ]
+    for td in testdirs:
+      self.helper.mkdir(td)
+    deletes = [self.helper.delete_dir(td) for td in testdirs]
+    self.assertTrue(deletes[0])             # delete is recursive
+    self.assertFalse(deletes[1])            # so it is too late for this call
 
 
 if __name__ == "__main__":
