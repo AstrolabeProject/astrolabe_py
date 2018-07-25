@@ -1,14 +1,12 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Make put_metaf return new metadata item count. Add delete_file and delete_dir.
+  Last Modified: Return metadata as list of Metadatum.
 """
-__version__ = "0.0.9"
-__author__ = "Tom Hicks"
-
 import os
 import logging
 import pathlib as pl
 from irods.session import iRODSSession
+from . import Metadatum
 
 logging.basicConfig(level=logging.INFO)    # default logging configuration
 
@@ -167,7 +165,7 @@ class IrodsHelper:
             if the absolute argument is True.
         """
         dirobj = self.getc(dir_path, absolute=absolute)
-        return dirobj.metadata.items()
+        return [Metadatum(item.name, item.value) for item in dirobj.metadata.items()]
 
     def get_metaf(self, file_path, absolute=False):
         """ Get the metadata for the specified file relative to the iRods
@@ -175,7 +173,7 @@ class IrodsHelper:
             if the absolute argument is True.
         """
         obj = self.getf(file_path, absolute=absolute)
-        return obj.metadata.items()
+        return [Metadatum(item.name, item.value) for item in obj.metadata.items()]
 
     def get_root(self):
         """ Get directory information for the users root directory. """
