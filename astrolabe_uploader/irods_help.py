@@ -1,6 +1,6 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Rename method to put_file.
+  Last Modified: Make put_metaf return new metadata item count. Add delete_file and delete_dir.
 """
 __version__ = "0.0.9"
 __author__ = "Tom Hicks"
@@ -108,6 +108,28 @@ class IrodsHelper:
         """ Return the current working directory path as a string. """
         return str(self._cwdpath)
 
+    def delete_dir(self, dir_path, absolute=False, force=False, recurse=True):
+        """ Delete the specified directory relative to the iRods current working directory
+            (default) OR relative to the users root directory, if the absolute argument is True.
+        """
+        try:
+            dirobj = self.getc(dir_path, absolute=absolute)
+            dirobj.remove(force=force, recurse=recurse)
+            return True
+        except:                             # ignore any errors
+            return False
+
+    def delete_file(self, file_path, absolute=False):
+        """ Delete the specified file relative to the iRods current working directory (default)
+            OR relative to the users root directory, if the absolute argument is True.
+        """
+        try:
+            obj = self.getf(file_path, absolute=absolute)
+            obj.unlink(force=True)
+            return True
+        except:                             # ignore any errors
+            return False
+
     def disconnect(self, options=None):
         """ Close down and cleanup the current session. """
         logging.info("(IrodsHelper.disconnect)")
@@ -177,7 +199,7 @@ class IrodsHelper:
     def put_metaf(self, file_path, metadata, absolute=False):
         """ Attach the given metadata on the file specified relative to the iRods
             current working directory (default) OR relative to the users root directory,
-            if the absolute argument is True.
+            if the absolute argument is True. Returns the new number of metadata items.
         """
         obj = self.getf(file_path, absolute=absolute)
         keys = [item[0] for item in metadata]
@@ -185,7 +207,7 @@ class IrodsHelper:
             del(obj.metadata[key])
         for item in metadata:
             obj.metadata.add(item[0], item[1])
-        return len(metadata)
+        return len(obj.metadata)
 
     def rel_path(self, path):
         """ Return an iRods path for the given path relative to the current working directory. """
