@@ -2,12 +2,13 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Add tests for remove_by_keys.
+#   Last Modified: Update for refactor of metadatum.
 #
 import json
 import unittest
 
 from context import fm                      # the module under test
+from astrolabe_uploader import Metadatum
 
 def suite():
   suite = unittest.TestSuite()
@@ -277,7 +278,7 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     "Finds item for valid key"
     item = self.fm.get("NAXIS")
     self.assertNotEqual(item, None)
-    self.assertEqual(type(item), fm.Metadatum)
+    self.assertEqual(type(item), Metadatum)
     self.assertEqual(item.keyword, "NAXIS")
     self.assertEqual(item.value, 2)
 
@@ -301,7 +302,7 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     "Finds item for valid key subscript"
     item = self.fm["NAXIS"]
     self.assertNotEqual(item, None)
-    self.assertEqual(type(item), fm.Metadatum)
+    self.assertEqual(type(item), Metadatum)
     self.assertEqual(item.keyword, "NAXIS")
     self.assertEqual(item.value, 2)
 

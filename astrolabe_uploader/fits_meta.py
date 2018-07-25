@@ -1,22 +1,16 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Add remove_by_keys method.
+  Last Modified: Refactor Metadatum class to package level.
 """
-__version__ = "0.0.5"
-__author__ = "Tom Hicks"
-
-import collections
 import copy
 import json
 import logging
 import re
 import warnings
 from astropy.io import fits
+from . import Metadatum
 
 logging.basicConfig(level=logging.ERROR)    # default logging configuration
-
-# class to hold an individual metadatum, a list of which is the metadata
-Metadatum = collections.namedtuple('Metadatum', ['keyword', 'value'])
 
 FILEPATH_KEY = "filepath"
 

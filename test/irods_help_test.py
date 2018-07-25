@@ -2,14 +2,14 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Update tests for put_metaf returning new metadata item count.
-#                  Add test case for delete* methods.
+#   Last Modified: Update for refactor of metadatum.
 #
 import unittest
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist, DataObjectDoesNotExist
 
 from context import ih                      # the module under test
+from astrolabe_uploader import Metadatum
 
 def suite():
   suite = unittest.TestSuite()

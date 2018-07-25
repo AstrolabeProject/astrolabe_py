@@ -2,15 +2,15 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Update for ignoring of some keys.
+#   Last Modified: Update for refactor of metadatum.
 #
 import unittest
 from astropy.io import fits
 
 from context import fo                      # the module under test
 from context import fm
+from astrolabe_uploader import Metadatum
 from astrolabe_uploader.fits_meta import FILEPATH_KEY
-
 
 def suite():
   suite = unittest.TestSuite()
@@ -43,7 +43,7 @@ class HandleCtypeMappingTestCase(FitsOpsTestCase):
     mdk0 = [md[0] for md in md0]
     self.assertNotIn("declination", mdk0)
     self.assertNotIn("right_ascension", mdk0)
-    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "RA--TAN"), [])
+    fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "RA--TAN"), [])
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertNotIn("declination", mdk1)
@@ -55,7 +55,7 @@ class HandleCtypeMappingTestCase(FitsOpsTestCase):
     mdk0 = [md[0] for md in md0]
     self.assertNotIn("declination", mdk0)
     self.assertNotIn("right_ascension", mdk0)
-    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "DEC--TAN"), [])
+    fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "DEC--TAN"), [])
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("declination", mdk1)
@@ -68,7 +68,7 @@ class HandleCtypeMappingTestCase(FitsOpsTestCase):
     ksub = ["NAXIS"]
     self.assertNotIn("declination", mdk0)
     self.assertNotIn("right_ascension", mdk0)
-    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "RA--TAN"), ksub)
+    fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "RA--TAN"), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertNotIn("declination", mdk1)
@@ -83,7 +83,7 @@ class HandleCtypeMappingTestCase(FitsOpsTestCase):
     ksub = ["NAXIS"]
     self.assertNotIn("declination", mdk0)
     self.assertNotIn("right_ascension", mdk0)
-    fo._handle_ctype_mapping(self.fmeta, fm.Metadatum("CTYPE1", "DEC--TAN"), ksub)
+    fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "DEC--TAN"), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertNotIn("right_ascension", mdk1)
@@ -104,7 +104,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     md0 = self.fmeta.metadata()
     mdk0 = [md[0] for md in md0]
     self.assertNotIn("BOGUS", mdk0)
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("BOGUS", 2), [])
+    fo._handle_alternate_key(self.fmeta, Metadatum("BOGUS", 2), [])
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertNotIn("BOGUS", mdk1)
@@ -114,7 +114,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     md0 = self.fmeta.metadata()
     mdk0 = [md[0] for md in md0]
     self.assertIn("NAXIS", mdk0)
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("NAXIS", 2), [])
+    fo._handle_alternate_key(self.fmeta, Metadatum("NAXIS", 2), [])
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("NAXIS", mdk1)
@@ -125,7 +125,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     mdk0 = [md[0] for md in md0]
     self.assertIn("OBJECT", mdk0)
     self.assertNotIn("obs_title", mdk0)
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("OBJECT", "Chandra"), [])
+    fo._handle_alternate_key(self.fmeta, Metadatum("OBJECT", "Chandra"), [])
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("OBJECT", mdk1)
@@ -140,7 +140,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     self.assertIn("NAXIS", ksub)            # in key subset
     self.assertNotIn("BOGUS", ksub)         # NOT in key subset
     self.assertNotIn("BOGUS", mdk0)         # NOT in original metadata
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("BOGUS", 2), ksub)
+    fo._handle_alternate_key(self.fmeta, Metadatum("BOGUS", 2), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("NAXIS", ksub)            # still in key subset
@@ -154,7 +154,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     ksub = ["BOGUS"]
     self.assertIn("BOGUS", ksub)            # in key subset
     self.assertNotIn("BOGUS", mdk0)         # NOT in original metadata
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("BOGUS", 2), ksub)
+    fo._handle_alternate_key(self.fmeta, Metadatum("BOGUS", 2), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("BOGUS", ksub)            # still in key subset
@@ -168,7 +168,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     self.assertIn("ZZZ", ksub)              # in key subset
     self.assertIn("NAXIS", mdk0)            # in original metadata
     self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("NAXIS", 2), ksub)
+    fo._handle_alternate_key(self.fmeta, Metadatum("NAXIS", 2), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("ZZZ", ksub)              # still in key subset
@@ -184,7 +184,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     self.assertIn("NAXIS", ksub)            # in key subset
     self.assertIn("NAXIS", mdk0)            # in original metadata
     self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("NAXIS", 2), ksub)
+    fo._handle_alternate_key(self.fmeta, Metadatum("NAXIS", 2), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("ZZZ", ksub)              # still in key subset
@@ -206,7 +206,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     self.assertIn("OBJECT", mdk0)           # in original metadata
     self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
     self.assertNotIn("obs_title", mdk0)     # NOT in original metadata
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("OBJECT", "Chandra"), ksub)
+    fo._handle_alternate_key(self.fmeta, Metadatum("OBJECT", "Chandra"), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("NAXIS", ksub)            # still in key subset
@@ -229,7 +229,7 @@ class HandleAltMappingTestCase(FitsOpsTestCase):
     self.assertIn("OBJECT", mdk0)           # in original metadata
     self.assertNotIn("ZZZ", mdk0)           # NOT in original metadata
     self.assertNotIn("obs_title", mdk0)     # NOT in original metadata
-    fo._handle_alternate_key(self.fmeta, fm.Metadatum("OBJECT", "Chandra"), ksub)
+    fo._handle_alternate_key(self.fmeta, Metadatum("OBJECT", "Chandra"), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
     self.assertIn("OBJECT", ksub)           # still in key subset
