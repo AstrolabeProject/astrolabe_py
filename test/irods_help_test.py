@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Update for refactor of metadatum.
+#   Last Modified: Update for put_metaf using Metadatum.
 #
 import unittest
 from irods.session import iRODSSession
@@ -396,8 +396,10 @@ class FilesTestCase(IrodsHelpTestCase):
     "Create a file and then put metadata on it using a relative path"
     dirpath = "testDir"
     upfile = "context.py"
-    mdata = [ ("Key1", "Value1"), ("KEY2", "VALUE2"), ("BIG_KEY3", "Three of Hearts") ]
-    mdata2 = [ ("Key1", "NewValue1"), ("KEY2", "NEW_VALUE2"), ("BIG_KEY3", "NO TRUMP") ]
+    mdata = [ Metadatum("Key1", "Value1"), Metadatum("KEY2", "VALUE2"),
+              Metadatum("BIG_KEY3", "Three of Hearts") ]
+    mdata2 = [ Metadatum("Key1", "NewValue1"), Metadatum("KEY2", "NEW_VALUE2"),
+               Metadatum("BIG_KEY3", "NO TRUMP") ]
     self.helper.mkdir(dirpath)
     self.helper.cd_down(dirpath)
     self.helper.put_file(upfile)
@@ -428,8 +430,10 @@ class FilesTestCase(IrodsHelpTestCase):
     dirpath = "testDir/test"
     upfile = "context.py"
     filepath = "{}/{}".format(dirpath, upfile)
-    mdata = [ ("Key1", "Value1"), ("KEY2", "VALUE2"), ("BIG_KEY3", "Three of Hearts") ]
-    mdata2 = [ ("Key1", "NewValue1"), ("KEY2", "NEW_VALUE2"), ("BIG_KEY3", "NO TRUMP") ]
+    mdata = [ Metadatum("Key1", "Value1"), Metadatum("KEY2", "VALUE2"),
+              Metadatum("BIG_KEY3", "Three of Hearts") ]
+    mdata2 = [ Metadatum("Key1", "NewValue1"), Metadatum("KEY2", "NEW_VALUE2"),
+               Metadatum("BIG_KEY3", "NO TRUMP") ]
     self.helper.cd_root()
     self.helper.mkdir(dirpath)
     self.helper.put_file(upfile, dirpath)
@@ -458,8 +462,10 @@ class FilesTestCase(IrodsHelpTestCase):
     "Create a file and then replace old and put new metadata on it"
     dirpath = "testDir"
     upfile = "empty.txt"
-    mdata = [ ("Key1", "Value1"), ("KEY2", "Value2"), ("KEY2", "Two Many") ]
-    mdata2 = [ ("Key1", "NewVal1"), ("KEY2", "Only2"), ("KEY3", "333"), ("KEY3", "THREE") ]
+    mdata = [ Metadatum("Key1", "Value1"), Metadatum("KEY2", "Value2"),
+              Metadatum("KEY2", "Two Many") ]
+    mdata2 = [ Metadatum("Key1", "NewVal1"), Metadatum("KEY2", "Only2"),
+               Metadatum("KEY3", "333"), Metadatum("KEY3", "THREE") ]
     self.helper.mkdir(dirpath)
     self.helper.cd_down(dirpath)
     self.helper.put_file(upfile)

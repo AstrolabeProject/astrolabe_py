@@ -1,6 +1,6 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Return metadata as list of Metadatum.
+  Last Modified: Update put_metaf to take list of Metadatum.
 """
 import os
 import logging
@@ -200,11 +200,11 @@ class IrodsHelper:
             if the absolute argument is True. Returns the new number of metadata items.
         """
         obj = self.getf(file_path, absolute=absolute)
-        keys = [item[0] for item in metadata]
+        keys = [item.keyword for item in metadata]
         for key in keys:
             del(obj.metadata[key])
         for item in metadata:
-            obj.metadata.add(item[0], item[1])
+            obj.metadata.add(item.keyword, item.value)
         return len(obj.metadata)
 
     def rel_path(self, path):
