@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Move file filter here.
+#   Last Modified: Initial working version of do_file.
 #
 import os
 import sys
@@ -19,12 +19,11 @@ def do_file(action, file_path, options):
     """ Do the specified action(s) on the given file. """
     verbose = options.get("verbose", False)
     metadata = fo.fits_metadata(file_path, options)
-    logging.info("Extracted {} metadata items from {}".format(len(metadata), file_path))
-    ihelper = ih.IrodsHelper()
-    ihelper.connect(options)
+    ihelper = ih.IrodsHelper(options=options)
     ensure_astrolabe_root(ihelper, options)
-    ihelper.put(file_path)
-    # TODO: attach the metadata to the iRods file
+    ihelper.put_file(file_path)
+    ihelper.put_metaf(file_path, metadata)
+    return True
 
 
 def do_tree(action, root_path, options):
