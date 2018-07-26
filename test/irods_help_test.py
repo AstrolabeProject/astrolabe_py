@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Update for put_metaf using Metadatum.
+#   Last Modified: Update for autoconnect in ctor.
 #
 import unittest
 from irods.session import iRODSSession
@@ -36,56 +36,69 @@ class ConnectionsTestCase(IrodsHelpTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    self.helper = ih.IrodsHelper()            # create instance of class under test
+    self.helper = None
+#    self.helper = ih.IrodsHelper(connect=False) # create instance of class under test
 
   def tearDown(self):
     "Cleanup the test case"
     self.helper.disconnect()
 
 
-  def test_helper(self):
-    "The helper instance has been created"
+  def test_connect_ctor(self):
+    "A default connection is made by the constructor"
+    self.helper = ih.IrodsHelper()
     self.assertNotEqual(self.helper, None)
+    self.assertTrue(self.helper.is_connected())
 
   def test_connect(self):
     "Make default connection"
-    self.helper.connect({})                 # no options
+    self.helper = ih.IrodsHelper(connect=False) # do not connect in ctor
+    self.assertNotEqual(self.helper, None)
+    self.helper.connect()                       # connect explicitly
     self.assertTrue(self.helper.is_connected())
 
   def test_connect_envfile(self):
     "Make connection using options specifying env file"
-    self.helper.connect(self.default_options)
+    self.helper = ih.IrodsHelper(options=self.default_options)
+    self.assertNotEqual(self.helper, None)
     self.assertTrue(self.helper.is_connected())
 
   def test_disconnect(self):
-    "The connection has been closed"
+    "Open connection and then close it"
+    self.helper = ih.IrodsHelper()
+    self.assertNotEqual(self.helper, None)
+    self.assertTrue(self.helper.is_connected())
     self.helper.disconnect()
     self.assertFalse(self.helper.is_connected())
 
   def test_get_session(self):
     "Get the session from the helper"
-    self.helper.connect({})                 # no options
+    self.helper = ih.IrodsHelper()
+    self.assertNotEqual(self.helper, None)
     sess = self.helper.session()
     self.assertNotEqual(sess, None)
     self.assertEqual(type(sess), iRODSSession)
 
   def test_get_cwd(self):
     "Get the current directory from the helper"
-    self.helper.connect({})                 # no options
+    self.helper = ih.IrodsHelper()
+    self.assertNotEqual(self.helper, None)
     cwd = self.helper.cwd()
     self.assertNotEqual(cwd, None)
     self.assertEqual(type(cwd), str)
 
   def test_get_root(self):
     "Get the root directory from the helper"
-    self.helper.connect({})                 # no options
+    self.helper = ih.IrodsHelper()
+    self.assertNotEqual(self.helper, None)
     root = self.helper.root()
     self.assertNotEqual(root, None)
     self.assertEqual(type(root), str)
 
   def test_cwd_is_root(self):
     "The initial working directory should be the root directory"
-    self.helper.connect({})                 # no options
+    self.helper = ih.IrodsHelper()
+    self.assertNotEqual(self.helper, None)
     root = self.helper.root()
     cwd = self.helper.cwd()
     self.assertEqual(cwd, root)
@@ -96,7 +109,6 @@ class MovementTestCase(IrodsHelpTestCase):
   def setUp(self):
     "Initialize the test case"
     self.helper = ih.IrodsHelper()          # create instance of class under test
-    self.helper.connect({})                 # no options
     self.assertTrue(self.helper.is_connected())
 
   def tearDown(self):
@@ -184,7 +196,6 @@ class FilesTestCase(IrodsHelpTestCase):
   def setUp(self):
     "Initialize the test case"
     self.helper = ih.IrodsHelper()          # create instance of class under test
-    self.helper.connect({})                 # no options
     self.assertTrue(self.helper.is_connected())
 
   def tearDown(self):
@@ -412,7 +423,6 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
-    self.assertNotEqual(md0, md1)
     self.assertEqual(len(md1), cnt1)
 
     cnt2 = self.helper.put_metaf(upfile, mdata2) # the test call
@@ -446,7 +456,6 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
-    self.assertNotEqual(md0, md1)
     self.assertEqual(len(md1), cnt1)
 
     cnt2 = self.helper.put_metaf(filepath, mdata2, absolute=True) # the test call
@@ -478,7 +487,6 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
-    self.assertNotEqual(md0, md1)
     self.assertEqual(len(md1), cnt1)
 
     cnt2 = self.helper.put_metaf(upfile, mdata2) # the test call
@@ -496,7 +504,6 @@ class WalkTestCase(IrodsHelpTestCase):
   def setUp(self):
     "Initialize the test case"
     self.helper = ih.IrodsHelper()          # create instance of class under test
-    self.helper.connect({})                 # connect: no special options
     self.assertTrue(self.helper.is_connected()) # sanity check: assert connected
     upfile = "context.py"                 # build a test directory tree
     upfile2 = "metadata-keys.txt"
@@ -607,7 +614,6 @@ class DeleteTestCase(IrodsHelpTestCase):
   def setUp(self):
     "Initialize the test case"
     self.helper = ih.IrodsHelper()          # create instance of class under test
-    self.helper.connect({})                 # connect: no special options
     self.assertTrue(self.helper.is_connected()) # sanity check: assert connected
 
   def test_delete_files(self):

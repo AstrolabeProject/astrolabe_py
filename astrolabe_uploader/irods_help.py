@@ -1,6 +1,6 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Update put_metaf to take list of Metadatum.
+  Last Modified: Make options a ctor argument, stored internally.
 """
 import os
 import logging
@@ -34,10 +34,13 @@ class IrodsHelper:
             session.cleanup()
 
 
-    def __init__(self):
+    def __init__(self, options={}, connect=True):
         self._cwdpath = None                # current working directory - a PurePath
         self._root = None                   # root directory path - a PurePath
         self._session = None                # current session
+        self._options = options             # dict of settings for this class
+        if (connect):                       # connect now unless specified otherwise
+            self.connect()
 
     def __enter__(self):
         return self
@@ -54,14 +57,14 @@ class IrodsHelper:
         """ Cleanup the current session. """
         self.disconnect()
 
-    def connect(self, options):
-        """ Create an iRods session using the given options, or
+    def connect(self):
+        """ Create an iRods session using the instantiation options, or
             a file specified by the environment variable IRODS_ENVIRONMENT_FILE, or
             the default irods_environment.json file.
         """
-        logging.info("(IrodsHelper.connect): options={}".format(options))
+        logging.info("(IrodsHelper.connect): options={}".format(self._options))
         try:
-            env_file = options["irods_env_file"]
+            env_file = self._options["irods_env_file"]
         except KeyError:
             try:
                 env_file = os.environ["IRODS_ENVIRONMENT_FILE"]
@@ -128,7 +131,7 @@ class IrodsHelper:
         except:                             # ignore any errors
             return False
 
-    def disconnect(self, options=None):
+    def disconnect(self):
         """ Close down and cleanup the current session. """
         logging.info("(IrodsHelper.disconnect)")
         if (self._session):
@@ -228,7 +231,7 @@ class IrodsHelper:
             user=json_body["user"],
             password=json_body["password"],
             zone=json_body["zone"])
-        self.set_root()                     # call with empty options
+        self.set_root()                     # call with default arguments
 
     def set_root(self, home_dir="home", top_dir=""):
         """ Compute and set the users root directory to the users iRods home directory (default)
