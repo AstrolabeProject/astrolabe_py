@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Update for refactor of metadatum.
+#   Last Modified: Update for metadata string values.
 #
 import json
 import unittest
@@ -21,7 +21,7 @@ class FitsMetaBaseTestCase(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls.test_file = "cvnidwabcut.fits"
-    cls.test_file_md_count = 55
+    cls.test_file_md_count = 56
 
 
 class FitsMetaTestCase(FitsMetaBaseTestCase):
@@ -280,7 +280,7 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertNotEqual(item, None)
     self.assertEqual(type(item), Metadatum)
     self.assertEqual(item.keyword, "NAXIS")
-    self.assertEqual(item.value, 2)
+    self.assertEqual(item.value, "2")
 
 
   def test_getitem_none(self):
@@ -304,7 +304,7 @@ class FitsMetaTestCase(FitsMetaBaseTestCase):
     self.assertNotEqual(item, None)
     self.assertEqual(type(item), Metadatum)
     self.assertEqual(item.keyword, "NAXIS")
-    self.assertEqual(item.value, 2)
+    self.assertEqual(item.value, "2")
 
 
   def test_copy_item_not_found(self):

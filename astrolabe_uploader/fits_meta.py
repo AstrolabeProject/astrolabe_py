@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Refactor Metadatum class to package level.
+  Last Modified: Convert metadata keys and values to strings.
 """
 import copy
 import json
@@ -129,8 +129,8 @@ class FitsMeta:
         """ Return a list of metadata pairs, extracted and cleaned from the given FITS Header. """
         metadata = []
         for k, v in header.items():
-            key = cleaner(k)
-            val = cleaner(v)
+            key = str(cleaner(k))           # clean key and ensure it is a string
+            val = str(cleaner(v))           # clean value and ensure it is a string
             if (key and val):
                 metadata.append(Metadatum(key, val))
         return metadata
