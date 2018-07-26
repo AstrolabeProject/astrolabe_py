@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Add a set of keys to ignore.
+#   Last Modified: Remove info and verify tasks.
 #
 import os
 import sys
@@ -33,35 +33,6 @@ def fits_metadata(file_path, options={}):
     fm = FitsMeta(file_path, ignore_keys=_IGNORE_KEYS)
     metadata = _post_process_metadata(fm, keys_subset)
     return metadata
-
-
-def fits_hdu_info(file_path, options=None):
-    """ Return a list of summary information strings for the HDUs of the given FITS file. """
-    fm = FitsMeta(file_path)
-    hduinfo = fm.hdu_info()
-    filename = os.path.basename(fm.filepath())
-    # format the information into a report (a list of strings):
-    results = ["Filename: {}".format(filename),
-               "No.    Name      Ver    Type      Cards   Dimensions   Format"]
-    layout = "{:3d}  {:10}  {:3} {:11}  {:5d}   {}   {}   {}"
-    for hinfo in hduinfo:
-        results.append(layout.format(*hinfo))
-    return results
-
-
-def fits_verify(file_path, options=None):
-    """ Verify that the data in the given FITS file conforms to the FITS standard.
-        Return a (possibly empty) list of verification warning strings.
-    """
-    results = []
-    with fits.open(file_path) as hdu:
-        with warnings.catch_warnings(record=True) as warns:
-            hdu.verify("fix+warn")
-            if (warns and len(warns) > 0):
-                results.append("Filename: {}".format(file_path))
-                for warn in warns:
-                    results.append(str(warn.message))
-    return results
 
 
 def _post_process_metadata(fm, keys_subset):
