@@ -1,6 +1,6 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Make options a ctor argument, stored internally.
+  Last Modified: Rewrite put_file. Reverse args on put_metaf for consistency.
 """
 import os
 import logging
@@ -188,16 +188,18 @@ class IrodsHelper:
         """
         return self._session.collections.create(self.rel_path(subdir_name))
 
-    def put_file(self, local_file, to_dir=None):
-        """ Upload the specified local file to the iRods current working directory (default) or
-            to a directory specified by the 'to_dir' argument.
+    def put_file(self, local_file, file_path, absolute=False):
+        """ Upload the specified local file to the specified path, relative to the iRods
+            current working directory (default) OR relative to the users root directory,
+            if the absolute argument is True.
         """
-        target_dir = self.cwd()                # default is the current working directory
-        if (to_dir):                           # if alternate directory path specified
-            target_dir = self.abs_path(to_dir) # then dir path is relative to users root dir
-        self._session.data_objects.put(local_file, self.to_dirpath(target_dir))
+        if (absolute):
+            filepath = self.abs_path(file_path) # path is relative to root dir
+        else:
+            filepath = self.rel_path(file_path) # path is relative to current working dir
+        self._session.data_objects.put(local_file, filepath)
 
-    def put_metaf(self, file_path, metadata, absolute=False):
+    def put_metaf(self, metadata, file_path, absolute=False):
         """ Attach the given metadata on the file specified relative to the iRods
             current working directory (default) OR relative to the users root directory,
             if the absolute argument is True. Returns the new number of metadata items.
