@@ -2,8 +2,9 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Add first do_file test.
+#   Last Modified: Update for test resources directory. Redo first do_file test.
 #
+import os
 import unittest
 from astropy.io import fits
 
@@ -24,27 +25,32 @@ class ULTestCase(unittest.TestCase):
   def setUpClass(cls):
     cls.default_options = { "verbose": True }
     cls.root_dir = up._ASTROLABE_ROOT_DIR
-    cls.test_file = "cvnidwabcut.fits"
-    cls.test_file_md_count = 64             # added 62 to initial 2 metadata items
+    # cls.test_file = "resources/cvnidwabcut.fits"
+    # cls.test_file_md_count = 64             # added 62 to initial 2 metadata items
+    cls.test_file = "resources/m13.fits"
+    cls.test_file_md_count = 25             # added 23 to initial 2 metadata items
 
 
 class FileTestCase(ULTestCase):
 
   def setUp(self):
     "Initialize the test case"
-    pass
+    self.ihelper = ih.IrodsHelper()
+    self.assertTrue(self.ihelper.is_connected())
+    up.ensure_astrolabe_root(self.ihelper)  # create/use astrolabe directory
 
   def tearDown(self):
-    pass
+    self.ihelper.disconnect()
+
 
   def test_do_file(self):
-    filename = self.test_file
-    filepath = "{}/{}".format(self.root_dir, filename)
-    ret = up.do_file("XNUP", filename, self.default_options) # the test call
+    """ Process and upload a single test file. """
+    upfile = self.test_file
+    basefile = os.path.basename(upfile)
+    ret = up.do_file(self.ihelper, upfile, basefile, options=self.default_options)
     self.assertTrue(ret)
 
-    helper = ih.IrodsHelper()
-    md = helper.get_metaf(filepath)
+    md = self.ihelper.get_metaf(basefile)
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
     self.assertTrue(len(md) > 0)
