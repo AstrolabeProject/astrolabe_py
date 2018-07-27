@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Update for metadata string values. Remove hdu_info and verify tests.
+#   Last Modified: Update for test resources directory.
 #
 import unittest
 from astropy.io import fits
@@ -26,7 +26,7 @@ class FitsOpsTestCase(unittest.TestCase):
   @classmethod
   def setUpClass(cls):
     cls.default_options = {}
-    cls.test_file = "cvnidwabcut.fits"
+    cls.test_file = "resources/cvnidwabcut.fits"
     cls.test_file_md_count = 62
 
 

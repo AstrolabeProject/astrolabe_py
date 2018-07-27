@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Update for metadata string values.
+#   Last Modified: Update for test resources directory.
 #
 import json
 import unittest
@@ -20,7 +20,7 @@ class FitsMetaBaseTestCase(unittest.TestCase):
   "Base test class"
   @classmethod
   def setUpClass(cls):
-    cls.test_file = "cvnidwabcut.fits"
+    cls.test_file = "resources/cvnidwabcut.fits"
     cls.test_file_md_count = 56
 
 
