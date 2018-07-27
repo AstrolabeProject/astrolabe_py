@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Update for test resources directory.
+#   Last Modified: Restore hdu_info and verify tests.
 #
 import unittest
 from astropy.io import fits
@@ -355,6 +355,22 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertIn("declination", mdkeys)
     for key in ksubset:
       self.assertIn(key, mdkeys)
+
+
+  def test_fits_hdu_info(self):
+    "Get summary info report for the HDUs of a file"
+    report = fo.fits_hdu_info(self.test_file)
+    self.assertNotEqual(report, None)
+    self.assertEqual(len(report), 3)        # filename, heading, and one HDU line
+    self.assertTrue(all([type(line) == str for line in report]))
+
+
+  def test_fits_verify(self):
+    "Get verification report for the HDUs of a file"
+    report = fo.fits_verify(self.test_file)
+    self.assertNotEqual(report, None)
+    self.assertTrue(all([type(line) == str for line in report]))
+    self.assertEqual(len(report), 6)        # Filename, preamble, HDU#, Card#, ErrorMsg, Note
 
 
 if __name__ == "__main__":
