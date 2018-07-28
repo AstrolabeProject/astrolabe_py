@@ -2,7 +2,7 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Move this module up. Switch to argparse.
+#   Last Modified: Add action dispatch to other modules.
 #
 import argparse
 import os
@@ -51,7 +51,7 @@ def main(argv):
                         help="a file specifying which metadata keys which should be processed")
 
     parser.add_argument("images_path",
-                        help="path to FITS file or directory of FITS files")
+                        help="path to a FITS file or a directory of FITS files to be processed")
 
     args = vars(parser.parse_args(argv))    # parse arguments into a dictionary
     # print("ARGS={}".format(args))           # DEBUGGING
@@ -63,12 +63,6 @@ def main(argv):
         parser.print_usage()
         sys.exit(4)
 
-    # check the image file or directory path argument, if given
-    # if ((len(args) < 1) or (not args[0].strip())):
-    #     print("Error: Missing required argument: path to image file or images directory")
-    #     print(usage)
-    #     sys.exit(3)
-
     # insure that the given path refers to a readable file or valid directory
     images_path = args.get("images_path")
     if (not os.path.exists(images_path)):   # alread insure non-empty by argparse
@@ -79,18 +73,18 @@ def main(argv):
         print("Error: Specified images path '{}' is not readable".format(images_path))
         sys.exit(6)
 
-    # figure out the action to perform on the files
+    # figure out the action to perform on the files; default to extract & upload:
     action = args.get("action", "store")
-
-    # # execute action sequence for a single file or a directory of files
-    # if (os.path.isfile(images_path)):
-    #     up.do_file(action, images_path, options)
-    # else:
-    #     if (os.path.isdir(images_path)):
-    #         up.do_tree(action, images_path, options)
-    #     else:
-    #         print("Error: Specified images path '{}' is not a file or directory".format(images_path))
-    #         sys.exit(7)
+    if (action == "store"):                 # upload and/or attach metadata
+        up.execute(args)
+    elif (action == "check"):               # check files for problems
+        pass
+    elif (action == "info"):                # produce HDU info for the files
+        pass
+    else:
+        print("Error: Action '{}' is not implemented. Please specify a valid action".format(action))
+        parser.print_usage()
+        sys.exit(7)
 
 
 if __name__ == "__main__":
