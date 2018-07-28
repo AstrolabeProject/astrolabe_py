@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Update for test resources directory. Redo first do_file test.
+#   Last Modified: Add basic do_tree test.
 #
 import os
 import unittest
@@ -29,6 +29,7 @@ class ULTestCase(unittest.TestCase):
     # cls.test_file_md_count = 64             # added 62 to initial 2 metadata items
     cls.test_file = "resources/m13.fits"
     cls.test_file_md_count = 25             # added 23 to initial 2 metadata items
+    cls.test_dir = "resources"
 
 
 class FileTestCase(ULTestCase):
@@ -55,6 +56,14 @@ class FileTestCase(ULTestCase):
     self.assertEqual(type(md), list)
     self.assertTrue(len(md) > 0)
     self.assertEqual(len(md), self.test_file_md_count)
+
+
+  def test_do_tree_basic(self):
+    """ Process and upload files from a directory. """
+    updir = self.test_dir
+    ret = up.do_tree(self.ihelper, updir, options=self.default_options)
+    self.assertTrue(ret)
+    # TODO: walk both trees in parallel and compare
 
 
 if __name__ == "__main__":
