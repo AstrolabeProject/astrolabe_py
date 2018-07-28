@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Add top-level execute_info method.
+#   Last Modified: Fix: single file case in execute_info.
 #
 import os
 import sys
@@ -35,7 +35,7 @@ def execute_info(options):
     # execute action for a single file or a directory of files
     file_path = options.get("images_path")
     if (os.path.isfile(file_path)):
-        fits_hdu_info(ihelper, file_path, options)
+        return [(fits_hdu_info(file_path, options))]
     else:
         if (os.path.isdir(file_path)):
             info_lst = [fits_hdu_info(fits_file, options)

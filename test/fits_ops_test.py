@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add some tests for execute_info.
+#   Last Modified: Add test for single file case in execute_info.
 #
 import unittest
 from astropy.io import fits
@@ -366,6 +366,17 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertNotEqual(report, None)
     self.assertEqual(len(report), 3)        # filename, heading, and one HDU line
     self.assertTrue(all([type(line) == str for line in report]))
+
+  def test_execute_info_one(self):
+    "Get summary info reports for a single FITS files"
+    reports = fo.execute_info({"images_path": self.test_file})
+    self.assertNotEqual(reports, None)
+    self.assertTrue(type(reports) == list)
+    self.assertEqual(len(reports), 1)
+    self.assertTrue(all([type(rpt) == list for rpt in reports]))
+    for rpt in reports:
+      self.assertEqual(len(rpt), 3)         # filename, heading, and one HDU line
+      self.assertTrue(all([type(line) == str for line in rpt]))
 
   def test_execute_info_nofits(self):
     "Get no summary info reports in directory with no FITS files"
