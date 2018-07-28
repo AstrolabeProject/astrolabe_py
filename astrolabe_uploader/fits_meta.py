@@ -1,6 +1,6 @@
 """
 Class to extract and format metadata from FITS files.
-  Last Modified: Convert metadata keys and values to strings.
+  Last Modified: Make imports absolute.
 """
 import copy
 import json
@@ -8,7 +8,7 @@ import logging
 import re
 import warnings
 from astropy.io import fits
-from . import Metadatum
+from astrolabe_uploader import Metadatum
 
 logging.basicConfig(level=logging.ERROR)    # default logging configuration
 

@@ -1,12 +1,12 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Rewrite put_file. Reverse args on put_metaf for consistency.
+  Last Modified: Make imports absolute.
 """
 import os
 import logging
 import pathlib as pl
 from irods.session import iRODSSession
-from . import Metadatum
+from astrolabe_uploader import Metadatum
 
 logging.basicConfig(level=logging.INFO)    # default logging configuration
 
