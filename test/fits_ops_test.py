@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Restore hdu_info and verify tests.
+#   Last Modified: Add some tests for execute_info.
 #
 import unittest
 from astropy.io import fits
@@ -28,6 +28,9 @@ class FitsOpsTestCase(unittest.TestCase):
     cls.default_options = {}
     cls.test_file = "resources/cvnidwabcut.fits"
     cls.test_file_md_count = 62
+    cls.test_dir = "resources"
+    cls.test_dir_file_count = 2
+    cls.empty_dir = "resources/empty_dir"
 
 
 class HandleCtypeMappingTestCase(FitsOpsTestCase):
@@ -363,6 +366,24 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertNotEqual(report, None)
     self.assertEqual(len(report), 3)        # filename, heading, and one HDU line
     self.assertTrue(all([type(line) == str for line in report]))
+
+  def test_execute_info_nofits(self):
+    "Get no summary info reports in directory with no FITS files"
+    reports = fo.execute_info({"images_path": self.empty_dir})
+    self.assertNotEqual(reports, None)
+    self.assertTrue(type(reports) == list)
+    self.assertEqual(len(reports), 0)
+
+  def test_execute_info(self):
+    "Get summary info reports for several FITS files"
+    reports = fo.execute_info({"images_path": self.test_dir})
+    self.assertNotEqual(reports, None)
+    self.assertTrue(type(reports) == list)
+    self.assertEqual(len(reports), self.test_dir_file_count)
+    self.assertTrue(all([type(rpt) == list for rpt in reports]))
+    for rpt in reports:
+      self.assertEqual(len(rpt), 3)         # filename, heading, and one HDU line
+      self.assertTrue(all([type(line) == str for line in rpt]))
 
 
   def test_fits_verify(self):

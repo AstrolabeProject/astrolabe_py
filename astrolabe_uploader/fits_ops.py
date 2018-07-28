@@ -1,12 +1,13 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Restore hdu_info and verify tasks.
+#   Last Modified: Add top-level execute_info method.
 #
 import os
 import sys
 import warnings
 from astropy.io import fits
+import astrolabe_uploader.utils as utils
 from astrolabe_uploader.fits_meta import FitsMeta
 
 # dictionary of alternates for standard FITS metadata keys
@@ -27,7 +28,24 @@ _CTYPES = { "CTYPE1": "CRVAL1",  "CTYPE2": "CRVAL2" }
 _IGNORE_KEYS = set([ "COMMENT", "HISTORY" ])
 
 
-def fits_hdu_info(file_path, options=None):
+def execute_info(options):
+    """ Returns a (possibly empty) list, each element of which is a list of
+        summary information strings for the HDUs in a single FITS file.
+    """
+    # execute action for a single file or a directory of files
+    file_path = options.get("images_path")
+    if (os.path.isfile(file_path)):
+        fits_hdu_info(ihelper, file_path, options)
+    else:
+        if (os.path.isdir(file_path)):
+            info_lst = [fits_hdu_info(fits_file, options)
+                        for fits_file in utils.filter_file_tree(file_path)]
+            return [info for info in info_lst if info] # just in case: remove empty lists
+        else:
+            print("Error: Specified file path '{}' is not a file or directory".format(file_path))
+            sys.exit(20)
+
+def fits_hdu_info(file_path, options={}):
     """ Return a list of summary information strings for the HDUs of the given FITS file. """
     fm = FitsMeta(file_path)
     hduinfo = fm.hdu_info()
