@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add test for single file case in execute_info.
+#   Last Modified: Add tests for execute_verify.
 #
 import unittest
 from astropy.io import fits
@@ -27,10 +27,12 @@ class FitsOpsTestCase(unittest.TestCase):
   def setUpClass(cls):
     cls.default_options = {}
     cls.test_file = "resources/cvnidwabcut.fits"
+    cls.test_file2 = "resources/m13.fits"
     cls.test_file_md_count = 62
     cls.test_dir = "resources"
     cls.test_dir_file_count = 2
     cls.empty_dir = "resources/empty_dir"
+    cls.test_warn_count = 1                 # M13 test file has no warnings
 
 
 class HandleCtypeMappingTestCase(FitsOpsTestCase):
@@ -398,11 +400,47 @@ class FitsMetadataTestCase(FitsOpsTestCase):
 
 
   def test_fits_verify(self):
-    "Get verification report for the HDUs of a file"
+    "Get verification report for a FITS file"
     report = fo.fits_verify(self.test_file)
     self.assertNotEqual(report, None)
     self.assertTrue(all([type(line) == str for line in report]))
-    self.assertEqual(len(report), 6)        # Filename, preamble, HDU#, Card#, ErrorMsg, Note
+    self.assertEqual(len(report), 6)        # filename, preamble, HDU#, Card#, ErrorMsg, Note
+
+  def test_execute_verify_one(self):
+    "Get verify reports for a single FITS files"
+    reports = fo.execute_verify({"images_path": self.test_file})
+    self.assertNotEqual(reports, None)
+    self.assertTrue(type(reports) == list)
+    self.assertEqual(len(reports), 1)
+    self.assertTrue(all([type(rpt) == list for rpt in reports]))
+    for rpt in reports:
+      self.assertEqual(len(rpt), 6)        # filename, preamble, HDU#, Card#, ErrorMsg, Note
+      self.assertTrue(all([type(line) == str for line in rpt]))
+
+  def test_execute_verify_nofits(self):
+    "Get no verify reports in directory with no FITS files"
+    reports = fo.execute_verify({"images_path": self.empty_dir})
+    self.assertNotEqual(reports, None)
+    self.assertTrue(type(reports) == list)
+    self.assertEqual(len(reports), 0)
+
+  def test_execute_verify_nowarns(self):
+    "Get no verify report from a FITS file with no problems"
+    reports = fo.execute_verify({"images_path": self.test_file2})
+    self.assertNotEqual(reports, None)
+    self.assertTrue(type(reports) == list)
+    self.assertEqual(len(reports), 0)
+
+  def test_execute_verify(self):
+    "Get verify reports for several FITS files"
+    reports = fo.execute_verify({"images_path": self.test_dir})
+    self.assertNotEqual(reports, None)
+    self.assertTrue(type(reports) == list)
+    self.assertEqual(len(reports), self.test_warn_count)
+    self.assertTrue(all([type(rpt) == list for rpt in reports]))
+    for rpt in reports:
+      self.assertEqual(len(rpt), 6)        # filename, preamble, HDU#, Card#, ErrorMsg, Note
+      self.assertTrue(all([type(line) == str for line in rpt]))
 
 
 if __name__ == "__main__":

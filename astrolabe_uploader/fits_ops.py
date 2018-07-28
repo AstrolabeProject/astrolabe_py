@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Fix: single file case in execute_info.
+#   Last Modified: Add execute_verify, fix list return in single file execute_* cases.
 #
 import os
 import sys
@@ -35,13 +35,14 @@ def execute_info(options):
     # execute action for a single file or a directory of files
     file_path = options.get("images_path")
     if (os.path.isfile(file_path)):
-        return [(fits_hdu_info(file_path, options))]
+        info = fits_hdu_info(file_path, options)
+        return [info] if info else []
     else:
         if (os.path.isdir(file_path)):
             info_lst = [fits_hdu_info(fits_file, options)
                         for fits_file in utils.filter_file_tree(file_path)]
             return [info for info in info_lst if info] # just in case: remove empty lists
-        else:
+        else:                                          # should never happen
             print("Error: Specified file path '{}' is not a file or directory".format(file_path))
             sys.exit(20)
 
@@ -117,6 +118,24 @@ def _handle_ctype_mapping(fm, item, keys_subset):
             if (copied and keys_subset):       # if only a subset of keys requested
                 keys_subset.append(interp_key) # add the interpretation keyword to the subset
 
+
+def execute_verify(options):
+    """ Returns a (possibly empty) list, each element of which is a list of
+        warning strings from files which violate the FITS standard.
+    """
+    # execute action for a single file or a directory of files
+    file_path = options.get("images_path")
+    if (os.path.isfile(file_path)):
+        warn = fits_verify(file_path, options)
+        return [warn] if warn else []
+    else:
+        if (os.path.isdir(file_path)):
+            warn_lst = [fits_verify(fits_file, options)
+                        for fits_file in utils.filter_file_tree(file_path)]
+            return [warn for warn in warn_lst if warn] # remove empty lists
+        else:                                          # should never happen
+            print("Error: Specified file path '{}' is not a file or directory".format(file_path))
+            sys.exit(30)
 
 def fits_verify(file_path, options=None):
     """ Verify that the data in the given FITS file conforms to the FITS standard.
