@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Add top-level execute method. Continue building do_file. Stub do_tree.
+#   Last Modified: Implement working versions of execute, do_file, and do_tree.
 #
 import os
 import sys
@@ -32,41 +32,47 @@ def execute(options):
     # execute action for a single file or a directory of files
     images_path = options.get("images_path")
     if (os.path.isfile(images_path)):
-        do_file(ihelper, images_path, options)
+        return [ do_file(ihelper, images_path, options) ]
     else:
         if (os.path.isdir(images_path)):
-            up.do_tree(ihelper, images_path, options)
+            return do_tree(ihelper, images_path, options)
         else:
             print("Error: Specified images path '{}' is not a file or directory".format(images_path))
             sys.exit(10)
 
 
-def do_file(ihelper, local_file, to_path, options):
+def do_file(ihelper, local_file, options):
     """ Do metadata extraction, file upload, and metadata attachment for the given file,
-        locating it at the given 'to_path'.
+        depending on the settings of the various arguments in the given 'options' dictionary.
     """
     verbose = options.get("verbose", False)
     upload_only = options.get("upload-only", False)
 
+    to_path = options.get("to_path")
+    if (not to_path):
+        to_path = os.path.basename(local_file)
+
+    if (verbose):
+        print("Uploading file {} to {} ...".format(local_file, to_path))
     ihelper.put_file(local_file, to_path)
+
     if (not upload_only):
+        if (verbose):
+            print("Extracting metadata from file {} ...".format(local_file))
         metadata = fo.fits_metadata(local_file, options)
+        if (verbose):
+            print("Attaching metadata to file {} ...".format(to_path))
         ihelper.put_metaf(metadata, to_path)
+
     return True
 
 
 def do_tree(ihelper, root_path, options):
-    """ Walk the filesystem tree from the given root_node and do the specified action(s)
-        on the files and directories.
-    """
-    # action_setup(action, root_path, options)
-    print()                                 # REMOVE LATER
+    """ Walk the filesystem tree from the given root_node and process the FITS files in it. """
+    results = []
     for fits_file in utils.filter_file_tree(root_path):
-        # TODO: IMPLEMENT LATER
-        print("uploader: processing file {}".format(fits_file)) # REMOVE LATER
-    # action_dispatch(action, fits_file, options)
-    # action_cleanup(action, root_path, options)
-    return True
+        results.append(do_file(ihelper, fits_file, options))
+    return results
 
 
 def ensure_astrolabe_root(ihelper):
