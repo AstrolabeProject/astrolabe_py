@@ -1,6 +1,6 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Make imports absolute.
+  Last Modified: Add cd method. Rename method to get_dir. Add absolute flag to mkdir.
 """
 import os
 import logging
@@ -8,7 +8,7 @@ import pathlib as pl
 from irods.session import iRODSSession
 from astrolabe_uploader import Metadatum
 
-logging.basicConfig(level=logging.INFO)    # default logging configuration
+logging.basicConfig(level=logging.ERROR)    # default logging configuration
 
 class IrodsHelper:
     """ Helper class for iRods commands """
@@ -37,7 +37,7 @@ class IrodsHelper:
     def __init__(self, options={}, connect=True):
         self._cwdpath = None                # current working directory - a PurePath
         self._root = None                   # root directory path - a PurePath
-        self._session = None                # current session
+        self._session = None                # current session - None until connected
         self._options = options             # dict of settings for this class
         if (connect):                       # connect now unless specified otherwise
             self.connect()
@@ -73,9 +73,11 @@ class IrodsHelper:
 
         logging.info("IrodsHelper.connect: env_file={}".format(env_file))
 
+        # session is established upon successful connection to iRods
         self._session = iRODSSession(irods_env_file=env_file)
         logging.info("IrodsHelper.connect: SESSION={}".format(self._session))
 
+        # users root directory is set to their iRods home directory
         self.set_root()
         logging.info("IrodsHelper.connect:    ROOT={}".format(self._root))
         logging.info("IrodsHelper.connect: CWDPATH={}".format(self._cwdpath))
@@ -98,10 +100,25 @@ class IrodsHelper:
 
     def cd_up(self):
         """ Change the current working directory to the parent directory. """
-        if (self._cwdpath and self._root):
+        if (self._cwdpath and self._root):  # if connected
             parent = self._cwdpath.parent
-            if (parent >= self._root):      # must not rise above root dir
+            if (parent >= self._root):      # cd must not rise above root dir
                 self._cwdpath = parent
+        else:
+            self._cwdpath = None
+
+    def cd(self, dir_path, absolute=False):
+        """ Change the current working directory to the given path relative to the
+            current working directory (default) OR relative to the users root directory,
+            if the absolute argument is True.
+        """
+        if (self._cwdpath and self._root):  # if connected
+            if (absolute):                  # path is relative to root dir
+                newdir = pl.PurePath(self._root / dir_path)
+            else:                           # path is relative to current working dir
+                newdir = pl.PurePath(self._cwdpath / dir_path)
+            if (newdir >= self._root):      # cd must not rise above root dir
+                self._cwdpath = newdir
         else:
             self._cwdpath = None
 
@@ -114,7 +131,7 @@ class IrodsHelper:
             (default) OR relative to the users root directory, if the absolute argument is True.
         """
         try:
-            dirobj = self.getc(dir_path, absolute=absolute)
+            dirobj = self.get_dir(dir_path, absolute=absolute)
             dirobj.remove(force=force, recurse=recurse)
             return True
         except:                             # ignore any errors
@@ -137,8 +154,15 @@ class IrodsHelper:
         if (self._session):
             self._session.cleanup()
             self._session = None
+            self._cwdpath = None
+            self._root = None
+            self._options = {}
 
-    def getc(self, dir_path, absolute=False):
+    def get_cwd(self):
+        """ Get directory information for the current working directory. """
+        return self._session.collections.get(self._cwdpath) if (self._cwdpath) else None
+
+    def get_dir(self, dir_path, absolute=False):
         """ Get the specified directory relative to the iRods current working directory (default)
             OR relative to the users root directory, if the absolute argument is True.
         """
@@ -147,10 +171,6 @@ class IrodsHelper:
         else:
             dirpath = self.rel_path(dir_path) # path is relative to current working dir
         return self._session.collections.get(dirpath)
-
-    def get_cwd(self):
-        """ Get directory information for the current working directory. """
-        return self._session.collections.get(self._cwdpath) if (self._cwdpath) else None
 
     def getf(self, file_path, absolute=False):
         """ Get the specified file relative to the iRods current working directory (default)
@@ -167,7 +187,7 @@ class IrodsHelper:
             current working directory (default) OR relative to the users root directory,
             if the absolute argument is True.
         """
-        dirobj = self.getc(dir_path, absolute=absolute)
+        dirobj = self.get_dir(dir_path, absolute=absolute)
         return [Metadatum(item.name, item.value) for item in dirobj.metadata.items()]
 
     def get_metaf(self, file_path, absolute=False):
@@ -182,11 +202,16 @@ class IrodsHelper:
         """ Get directory information for the users root directory. """
         return self._session.collections.get(self._root)
 
-    def mkdir(self, subdir_name):
-        """ Make a directory (collection) with the given name at the current working directory.
-            Returns the iRods ID of the collection.
+    def mkdir(self, dir_path, absolute=False):
+        """ Make a directory (collection) with the given path relative to the iRods
+            current working directory (default) OR relative to the users root directory,
+            if the absolute argument is True. Returns the iRods ID of the collection.
         """
-        return self._session.collections.create(self.rel_path(subdir_name))
+        if (absolute):
+            dirpath = self.abs_path(dir_path) # path is relative to root dir
+        else:
+            dirpath = self.rel_path(dir_path) # path is relative to current working dir
+        return self._session.collections.create(dirpath)
 
     def put_file(self, local_file, file_path, absolute=False):
         """ Upload the specified local file to the specified path, relative to the iRods
