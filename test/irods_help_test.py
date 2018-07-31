@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Rename ihelper, for consistency. Add tests for cd method. Update for get_dir rename.
+#   Last Modified: Add mkdir abs and rel tests.
 #
 import os
 import unittest
@@ -388,26 +388,112 @@ class FilesTestCase(IrodsHelpTestCase):
     # self.ihelper.delete_dir("test", force=True)
     self.ihelper.disconnect()
 
+  def test_rel_mkdir_down1(self):
+    "Make a new directory and move into it, relative to cwd"
+    self.ihelper.mkdir("testDir")           # make test subdir
+    self.ihelper.cd_down("testDir")         # move into subdir
+    root1 = self.ihelper.root()
+    cwd1 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, root1)
+    id = self.ihelper.mkdir("testDir2")     # the test call
+    self.ihelper.cd_down("testDir2")        # move into new subdir
+    cwd2 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}/{}".format(root1, "testDir", "testDir2")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
 
-  def test_mkdir(self):
-    "Make a new directory and move into it"
+  def test_rel_mkdir_down1_fromroot(self):
+    "Make a new directory and move into it, relative to cwd=root"
     root1 = self.ihelper.root()
     cwd1 = self.ihelper.cwd()
     self.assertEqual(cwd1, root1)
-    id = self.ihelper.mkdir("testDir")       # the test call
-    self.ihelper.cd_down("testDir")          # move into new subdir
+    id = self.ihelper.mkdir("testDirR")     # the test call
+    self.ihelper.cd_down("testDirR")        # move into new subdir
     cwd2 = self.ihelper.cwd()
     self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}".format(root1, "testDirR")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
 
-  def test_mkdir2(self):
-    "Make multiple new directories and move to the bottom one"
+  def test_rel_mkdir_downN(self):
+    "Make multiple new directories and move to the bottom one, relative to cwd"
+    self.ihelper.mkdir("testDir")           # make test subdir
+    self.ihelper.cd_down("testDir")         # move into subdir
+    root1 = self.ihelper.root()
+    cwd1 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, root1)
+    id = self.ihelper.mkdir("testDir2/test/tmp") # the test call
+    self.ihelper.cd_down("testDir2/test/tmp")    # move into new subdir
+    cwd2 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}/{}".format(root1, "testDir", "testDir2/test/tmp")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
+
+  def test_rel_mkdir_downN_fromroot(self):
+    "Make multiple new directories and move to the bottom one, relative to cwd=root"
     root1 = self.ihelper.root()
     cwd1 = self.ihelper.cwd()
     self.assertEqual(cwd1, root1)
-    id = self.ihelper.mkdir("testDir/test/tmp") # the test call
-    self.ihelper.cd_down("testDir/test/tmp")    # move into new subdir
+    id = self.ihelper.mkdir("testDirR/test/tmp") # the test call
+    self.ihelper.cd_down("testDirR/test/tmp")    # move into new subdir
     cwd2 = self.ihelper.cwd()
     self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}".format(root1, "testDirR/test/tmp")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
+
+
+  def test_abs_mkdir_down1(self):
+    "Make a new directory and move into it, relative to root, cwd not= root"
+    self.ihelper.mkdir("testDir/testDir2")   # make test subdir
+    self.ihelper.cd_down("testDir/testDir2") # move into subdir
+    root1 = self.ihelper.root()
+    cwd1 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, root1)
+    id = self.ihelper.mkdir("testDirA", absolute=True) # the test call
+    self.ihelper.cd_root()                  # move back to root dir
+    self.ihelper.cd_down("testDirA")        # move into new subdir
+    cwd2 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}".format(root1, "testDirA")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
+
+  def test_abs_mkdir_down1_fromroot(self):
+    "Make a new directory and move into it, relative to root, cwd=root"
+    root1 = self.ihelper.root()
+    cwd1 = self.ihelper.cwd()               # cwd same as root
+    self.assertEqual(cwd1, root1)
+    id = self.ihelper.mkdir("testDirA2", absolute=True) # the test call
+    self.ihelper.cd_down("testDirA2")       # move into new subdir
+    cwd2 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}".format(root1, "testDirA2")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
+
+  def test_abs_mkdir_downN(self):
+    "Make multiple new directories and move to the bottom one, relative to root, cwd not= root"
+    self.ihelper.mkdir("testDir/testDir2")  # make test subdir
+    self.ihelper.cd_down("testDir/testDir2") # move into subdir
+    root1 = self.ihelper.root()
+    cwd1 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, root1)
+    id = self.ihelper.mkdir("testDirA/test/tmp", absolute=True) # the test call
+    self.ihelper.cd_root()                  # move back to root dir
+    self.ihelper.cd_down("testDirA/test/tmp") # move into new subdir
+    cwd2 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}".format(root1, "testDirA/test/tmp")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
+
+  def test_abs_mkdir_downN_fromroot(self):
+    "Make multiple new directories and move to the bottom one, relative to root, cwd=root"
+    root1 = self.ihelper.root()
+    cwd1 = self.ihelper.cwd()               # cwd same as root
+    self.assertEqual(cwd1, root1)
+    id = self.ihelper.mkdir("testDirA2/test/tmp", absolute=True) # the test call
+    self.ihelper.cd_down("testDirA2/test/tmp") # move into new subdir
+    cwd2 = self.ihelper.cwd()
+    self.assertNotEqual(cwd1, cwd2)
+    endcwd = "{}/{}".format(root1, "testDirA2/test/tmp")
+    self.assertEqual(cwd2, endcwd)          # cwd where it should be at end
 
 
   def test_getf_bad_file_rel(self):
@@ -680,7 +766,6 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
-    self.assertEqual(len(md1), cnt1)
 
     cnt2 = self.ihelper.put_metaf(mdata2, filepath, absolute=True) # the test call
     md2 = self.ihelper.get_metaf(filepath, absolute=True)
@@ -711,7 +796,6 @@ class FilesTestCase(IrodsHelpTestCase):
     self.assertNotEqual(md1, None)
     self.assertEqual(type(md1), list)
     self.assertTrue(len(md1) > len(mdata))
-    self.assertEqual(len(md1), cnt1)
 
     cnt2 = self.ihelper.put_metaf(mdata2, upfile) # the test call
     md2 = self.ihelper.get_metaf(upfile)
