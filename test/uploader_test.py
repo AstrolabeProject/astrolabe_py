@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Do tests for uploader execute method with files and dirs.
+#   Last Modified: Update test for increased FITS file count.
 #
 import os
 import unittest
@@ -26,8 +26,7 @@ class ULTestCase(unittest.TestCase):
     cls.default_options = { }
     cls.root_dir = up._ASTROLABE_ROOT_DIR
     cls.test_dir = "resources"
-    cls.test_dir_fits_count = 2
-    cls.test_dir_file_count = 4
+    cls.test_dir_fits_count = 4
     cls.empty_dir = "resources/empty_dir"
     cls.empty2_dir = "resources/test2"
     # cls.test_file = "resources/cvnidwabcut.fits"
