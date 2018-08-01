@@ -1,7 +1,7 @@
 #
 # Module to provide general utility functions for Astrolabe code.
 #   Written by: Tom Hicks. 7/26/2018.
-#   Last Modified: Refactor metadata key file handling here.
+#   Last Modified: Fix: bad call from last refactoring.
 #
 import os
 import fnmatch
@@ -23,7 +23,7 @@ def filter_file_tree(root_dir):
     gzfits_pat = "*.fits.gz"                # pattern for identifying gzipped FITS files
     for root, dirs, files in os.walk(root_dir):
         for fyl in files:
-            if (is_files_file(fyl)):
+            if (is_fits_file(fyl)):
                 file_path = os.path.join(root, fyl)
                 yield file_path
 

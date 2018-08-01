@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add tests for execute_verify.
+#   Last Modified: Update for test file changes.
 #
 import unittest
 from astropy.io import fits
@@ -30,7 +30,7 @@ class FitsOpsTestCase(unittest.TestCase):
     cls.test_file2 = "resources/m13.fits"
     cls.test_file_md_count = 62
     cls.test_dir = "resources"
-    cls.test_dir_file_count = 2
+    cls.test_dir_file_count = 4
     cls.empty_dir = "resources/empty_dir"
     cls.test_warn_count = 1                 # M13 test file has no warnings
 

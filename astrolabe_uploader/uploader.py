@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Implement metadata subset keyfile loading.
+#   Last Modified: Remove leftover debugging statement.
 #
 import os
 import sys
@@ -28,7 +28,6 @@ def execute(options):
     # get the desired subset of metadata keys, if any specified by a keyfile
     md_keys = utils.get_metadata_keys(options)
     if (md_keys):
-        print("MD_KEYS={}".format(md_keys)) # REMOVE LATER
         options["keys_subset"] = md_keys
 
     # execute action for a single file or a directory of files
