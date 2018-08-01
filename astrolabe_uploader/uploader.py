@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Implement working versions of execute, do_file, and do_tree.
+#   Last Modified: Expand do_tree to walk local filesystem, creating parallel iRods filesystem.
 #
 import os
 import sys
@@ -68,10 +68,18 @@ def do_file(ihelper, local_file, options):
 
 
 def do_tree(ihelper, root_path, options):
-    """ Walk the filesystem tree from the given root_node and process the FITS files in it. """
+    """ Walk the local filesystem tree from the given root_node and process any FITS files.
+        The walk creates a parallel tree in the iRods Astrolabe area and calls do_file to
+        upload the files (and possibly their metadata) to the corresponding iRods directories.
+    """
     results = []
-    for fits_file in utils.filter_file_tree(root_path):
-        results.append(do_file(ihelper, fits_file, options))
+    for root, dirs, files in os.walk(root_path):
+        ihelper.mkdir(root, absolute=True)  # make corresponding iRods directory
+        ihelper.cd(root, absolute=True)     # make it the current working directory
+        for afile in files:                 # for files at this level
+            if (utils.is_fits_file(afile)): # if a file is a FITS file
+                local_filepath = os.path.join(root, afile)
+                results.append(do_file(ihelper, local_filepath, options))
     return results
 
 
