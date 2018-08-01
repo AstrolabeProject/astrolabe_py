@@ -2,7 +2,7 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Add action dispatch to other modules.
+#   Last Modified: Refactor metadata key file handling to utils module.
 #
 import argparse
 import os
@@ -10,16 +10,6 @@ import sys
 
 from astrolabe_uploader import __version__
 import astrolabe_uploader.uploader as up
-
-# Text file of desired metadata keys, one per line
-_DEFAULT_KEYS_FILE = "metadata-keys.txt"
-
-def get_metadata_keys(options):
-    """ Return a list of metadata keys to be extracted. """
-    keyfile = options.get("keyfile")
-    with open(keyfile, "r") as mdkeys_file:
-        return mdkeys_file.read().splitlines()
-
 
 def main(argv):
     """ Perform actions on a FITS file or a directory of FITS files. """

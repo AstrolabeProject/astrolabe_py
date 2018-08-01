@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Update test for increased FITS file count.
+#   Last Modified: Add test for metadata subset keyfile loading.
 #
 import os
 import unittest
@@ -29,10 +29,12 @@ class ULTestCase(unittest.TestCase):
     cls.test_dir_fits_count = 4
     cls.empty_dir = "resources/empty_dir"
     cls.empty2_dir = "resources/test2"
-    # cls.test_file = "resources/cvnidwabcut.fits"
-    # cls.test_file_md_count = 64             # added 62 to initial 2 metadata items
+    cls.test_fileB = "resources/cvnidwabcut.fits"
+    cls.test_fileB_md_count = 64             # added 62 to initial 2 metadata items
     cls.test_file = "resources/m13.fits"
     cls.test_file_md_count = 25             # added 23 to initial 2 metadata items
+    cls.test_md_keysfile = "md-keys-subset.txt"
+    cls.test_md_keycount = 12               # test fileB only has 12 releveant keys
 
 
 class FileTestCase(ULTestCase):
@@ -86,6 +88,22 @@ class FileTestCase(ULTestCase):
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
     self.assertEqual(len(md), self.test_file_md_count)
+
+  def test_execute_file1_mdsubset(self):
+    "Process a single FITS file to the astrolabe directory with reduced metadata keyset"
+    print()
+    upfile = self.test_fileB
+    basefile = os.path.basename(upfile)
+    options = { "images_path": upfile, "verbose": True, "keyfile": self.test_md_keysfile }
+    rets = up.execute(options)
+    self.assertNotEqual(rets, None)
+    self.assertEqual(len(rets), 1)
+    self.assertTrue(all(rets))
+    # now fetch and test the metadata just created:
+    md = self.ihelper.get_metaf("{}/{}".format(self.root_dir, basefile))
+    self.assertNotEqual(md, None)
+    self.assertEqual(type(md), list)
+    self.assertEqual(len(md), self.test_md_keycount)
 
   def test_execute_file1_rename(self):
     "Process a single FITS file to the astrolabe directory with rename"

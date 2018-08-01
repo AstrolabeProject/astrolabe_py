@@ -1,0 +1,15 @@
+filepath
+right_ascension
+declination
+CRPIX1
+CRPIX2
+DATEREF
+ORIGIN
+CTYPE1
+CRVAL1
+CTYPE2
+CRVAL2
+facility_name
+instrument_name
+obs_creator_name
+obs_title

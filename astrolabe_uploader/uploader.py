@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Expand do_tree to walk local filesystem, creating parallel iRods filesystem.
+#   Last Modified: Implement metadata subset keyfile loading.
 #
 import os
 import sys
@@ -23,11 +23,13 @@ def execute(options):
     """
     # create connection to iRods
     ihelper = ih.IrodsHelper()
-    if (not ihelper.is_connected()):
-        pass                                # TODO: handle this case
     ensure_astrolabe_root(ihelper)          # create/use astrolabe directory, as needed
 
-    # TODO: load keysfile, if specified
+    # get the desired subset of metadata keys, if any specified by a keyfile
+    md_keys = utils.get_metadata_keys(options)
+    if (md_keys):
+        print("MD_KEYS={}".format(md_keys)) # REMOVE LATER
+        options["keys_subset"] = md_keys
 
     # execute action for a single file or a directory of files
     images_path = options.get("images_path")
