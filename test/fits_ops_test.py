@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Update for test file changes.
+#   Last Modified: Add ignore keys tests.
 #
 import unittest
 from astropy.io import fits
@@ -28,7 +28,7 @@ class FitsOpsTestCase(unittest.TestCase):
     cls.default_options = {}
     cls.test_file = "resources/cvnidwabcut.fits"
     cls.test_file2 = "resources/m13.fits"
-    cls.test_file_md_count = 62
+    cls.test_file_md_count = 64
     cls.test_dir = "resources"
     cls.test_dir_file_count = 4
     cls.empty_dir = "resources/empty_dir"
@@ -360,6 +360,71 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertIn("declination", mdkeys)
     for key in ksubset:
       self.assertIn(key, mdkeys)
+
+
+  def test_ignore_no_keys(self):
+    "Extract all metadata if no ignore keys specified"
+    metadata = fo.fits_metadata(self.test_file) # the test call
+    self.assertNotEqual(metadata, None)
+    # for md in metadata:
+    #   print("{}: {}".format(md.keyword, md.value))
+    self.assertEqual(len(metadata), self.test_file_md_count)
+    mdkeys = [md[0] for md in metadata]
+    self.assertIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("HISTORY", mdkeys)        # should be present
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("NAXIS", mdkeys)          # some standard keys
+    self.assertIn("INSTRUME", mdkeys)
+    self.assertIn("OBSERVER", mdkeys)
+    self.assertIn("OBJECT", mdkeys)
+    self.assertIn("facility_name", mdkeys)  # derived from standard keys
+    self.assertIn("obs_creator_name", mdkeys)
+    self.assertIn("obs_title", mdkeys)
+
+  def test_ignore1_key(self):
+    "Do not extract metadata for ignored key"
+    options = { "ignore_keys": ["HISTORY"], "verbose": True }
+    metadata = fo.fits_metadata(self.test_file, options) # the test call
+    self.assertNotEqual(metadata, None)
+    # for md in metadata:
+    #   print("{}: {}".format(md.keyword, md.value))
+    self.assertEqual(len(metadata), self.test_file_md_count - 2) # HISTORY twice in test file
+    mdkeys = [md[0] for md in metadata]
+    self.assertIn(FILEPATH_KEY, mdkeys)
+    self.assertNotIn("HISTORY", mdkeys)     # should be ignored
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("NAXIS", mdkeys)          # some standard keys
+    self.assertIn("INSTRUME", mdkeys)
+    self.assertIn("OBSERVER", mdkeys)
+    self.assertIn("OBJECT", mdkeys)
+    self.assertIn("facility_name", mdkeys)  # derived from standard keys
+    self.assertIn("obs_creator_name", mdkeys)
+    self.assertIn("obs_title", mdkeys)
+
+  def test_ignoreN_keys(self):
+    "Do not extract metadata for ignored keys"
+    options = { "ignore_keys": ["NAXIS", "INSTRUME", "obs_title", "CDELT1"], "verbose": True }
+    metadata = fo.fits_metadata(self.test_file, options) # the test call
+    self.assertNotEqual(metadata, None)
+    # for md in metadata:
+    #   print("{}: {}".format(md.keyword, md.value))
+    self.assertEqual(len(metadata), self.test_file_md_count - 4)
+    mdkeys = [md[0] for md in metadata]
+    self.assertIn(FILEPATH_KEY, mdkeys)
+    self.assertIn("HISTORY", mdkeys)        # should be present
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertNotIn("NAXIS", mdkeys)       # explicitly removed
+    self.assertNotIn("CDELT1", mdkeys)      # explicitly removed
+    self.assertIn("CDELT2", mdkeys)         # still present: unaffected by similar name
+    self.assertNotIn("INSTRUME", mdkeys)    # explicitly removed
+    self.assertNotIn("facility_name", mdkeys) # NOT present because INSTRUME explicitly removed
+    self.assertIn("OBSERVER", mdkeys)
+    self.assertIn("obs_creator_name", mdkeys) # derived from OBSERVER, so still present
+    self.assertIn("OBJECT", mdkeys)
+    self.assertIn("obs_title", mdkeys)      # derived from OBJECT, so still present
 
 
   def test_fits_hdu_info(self):

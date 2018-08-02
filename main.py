@@ -2,7 +2,7 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Refactor metadata key file handling to utils module.
+#   Last Modified: Refactor ignore keys to here.
 #
 import argparse
 import os
@@ -10,6 +10,9 @@ import sys
 
 from astrolabe_uploader import __version__
 import astrolabe_uploader.uploader as up
+
+# set of metadata keys to ignore when extracting metadata from FITS files
+_IGNORE_KEYS = set([ "COMMENT", "HISTORY" ])
 
 def main(argv):
     """ Perform actions on a FITS file or a directory of FITS files. """
@@ -44,6 +47,7 @@ def main(argv):
                         help="path to a FITS file or a directory of FITS files to be processed")
 
     args = vars(parser.parse_args(argv))    # parse arguments into a dictionary
+    args["ignore_keys"] = _IGNORE_KEYS      # add keys to ignore for this app
     # print("ARGS={}".format(args))           # DEBUGGING
 
     # check the keyfile path argument, if given

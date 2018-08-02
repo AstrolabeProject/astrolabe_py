@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Add execute_verify, fix list return in single file execute_* cases.
+#   Last Modified: Refactor ignore keys to main app.
 #
 import os
 import sys
@@ -23,9 +23,6 @@ _ALTERNATE_KEYS_MAP = {
 
 # dictionary mapping CTYPE* key names to their associated CRVAL* key names
 _CTYPES = { "CTYPE1": "CRVAL1",  "CTYPE2": "CRVAL2" }
-
-# set of metadata keys to ignore when extracting metadata from FITS files
-_IGNORE_KEYS = set([ "COMMENT", "HISTORY" ])
 
 
 def execute_info(options):
@@ -63,7 +60,8 @@ def fits_hdu_info(file_path, options={}):
 def fits_metadata(file_path, options={}):
     """ Return a list Metadatum tuples extracted from the given FITS file. """
     keys_subset = options.get("keys_subset")
-    fm = FitsMeta(file_path, ignore_keys=_IGNORE_KEYS)
+    ignore_keys = options.get("ignore_keys")
+    fm = FitsMeta(file_path, ignore_keys=ignore_keys)
     metadata = _post_process_metadata(fm, keys_subset)
     return metadata
 
