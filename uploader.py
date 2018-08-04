@@ -2,7 +2,7 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Refactor ignore keys to here.
+#   Last Modified: Refactor checking/info into a separate script.
 #
 import argparse
 import os
@@ -15,22 +15,15 @@ import astrolabe_uploader.uploader as up
 _IGNORE_KEYS = set([ "COMMENT", "HISTORY" ])
 
 def main(argv):
-    """ Perform actions on a FITS file or a directory of FITS files. """
-    options = { "action": "md" }
-    is_file = False                         # assume directory by default
-    program = "ALUP"
+    """ FITS file metadata extraction and upload of a file or directory of files. """
+    program = "uploader"
     version = "{} version {}".format(program, __version__)
 
     parser = argparse.ArgumentParser(
         prog=program,
         allow_abbrev=False,
-        description="Perform actions on a FITS file or a directory of FITS files."
+        description= "FITS file metadata extraction and upload of a file or directory of files."
     )
-    parser.add_argument("-a", "--action",
-                        choices=["check", "info", "store"],
-                        default="store",
-                        help="action to perform on FITS file(s)")
-
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="provide more information during execution")
 
@@ -67,18 +60,8 @@ def main(argv):
         print("Error: Specified images path '{}' is not readable".format(images_path))
         sys.exit(6)
 
-    # figure out the action to perform on the files; default to extract & upload:
-    action = args.get("action", "store")
-    if (action == "store"):                 # upload and/or attach metadata
-        up.execute(args)
-    elif (action == "check"):               # check files for problems
-        pass
-    elif (action == "info"):                # produce HDU info for the files
-        pass
-    else:
-        print("Error: Action '{}' is not implemented. Please specify a valid action".format(action))
-        parser.print_usage()
-        sys.exit(7)
+    # upload the FITS files to iRods and possibly attach their metadata
+    up.execute(args)
 
 
 if __name__ == "__main__":
