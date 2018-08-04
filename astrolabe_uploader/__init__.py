@@ -1,5 +1,4 @@
-__version__ = "0.0.10"
-__author__ = "Tom Hicks"
+__version__ = "0.0.11"
 
 import collections
 
