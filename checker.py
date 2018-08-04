@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+#
+# Program to perform verification or information operations on one or more FITS files.
+#   Written by: Tom Hicks. 8/3/2018.
+#   Last Modified: Initial creation by splitting tasks from uploader scripts.
+#
+import argparse
+import os
+import sys
+
+from astrolabe_uploader import __version__
+import astrolabe_uploader.fits_ops as fo
+
+def main(argv):
+    """ Perform verification actions on a FITS file or a directory of FITS files. """
+    options = { "action": "check" }
+    program = "ALCheck"
+    version = "{} version {}".format(program, __version__)
+
+    parser = argparse.ArgumentParser(
+        prog=program,
+        allow_abbrev=False,
+        description="Perform verification actions on a FITS file or a directory of FITS files."
+    )
+    parser.add_argument("-a", "--action",
+                        # choices=["check", "fix", "info"],
+                        choices=["check", "info"],
+                        default="check",
+                        help="action to perform on FITS file(s)")
+
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="provide more information during execution")
+
+    parser.add_argument("--version", action="version", version=version)
+
+    parser.add_argument("images_path",
+                        help="path to a FITS file or a directory of FITS files to be processed")
+
+    args = vars(parser.parse_args(argv))    # parse arguments into a dictionary
+    # print("ARGS={}".format(args))           # DEBUGGING
+
+    # insure that the given path refers to a readable file or valid directory
+    images_path = args.get("images_path")
+    if (not os.path.exists(images_path)):   # alread insure non-empty by argparse
+        print("Error: Specified images path '{}' not found or is not readable".format(images_path))
+        sys.exit(5)
+
+    if (not os.access(images_path, os.R_OK)):
+        print("Error: Specified images path '{}' is not readable".format(images_path))
+        sys.exit(6)
+
+    # figure out the action to perform on the files; default to extract & upload:
+    action = args.get("action", "check")
+    if (action == "check"):                 # check files for problems
+        output_results(fo.execute_verify(args))
+    # elif (action == "fix"):                 # fix fixable problems in files
+    #     fo.execute_fix(args)
+    elif (action == "info"):                # produce HDU info for the files
+        output_results(fo.execute_info(args))
+    else:
+        print("Error: Action '{}' is not implemented. Please specify a valid action".format(action))
+        parser.print_usage()
+        sys.exit(7)
+
+
+def output_results(results):
+    """ Output a list of lists of strings to standard output. """
+    for res in results:
+        for line in res:
+            print(line)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
