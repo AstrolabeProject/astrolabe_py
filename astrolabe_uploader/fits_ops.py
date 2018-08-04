@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Refactor ignore keys to main app.
+#   Last Modified: Add file echoing with verbose flag.
 #
 import os
 import sys
@@ -45,6 +45,9 @@ def execute_info(options):
 
 def fits_hdu_info(file_path, options={}):
     """ Return a list of summary information strings for the HDUs of the given FITS file. """
+    verbose = options.get("verbose", False)
+    if (verbose):
+        print("Reading HDU information for file {} ...".format(file_path))
     fm = FitsMeta(file_path)
     hduinfo = fm.hdu_info()
     filename = os.path.basename(fm.filepath())
@@ -139,8 +142,11 @@ def fits_verify(file_path, options=None):
     """ Verify that the data in the given FITS file conforms to the FITS standard.
         Return a (possibly empty) list of verification warning strings.
     """
+    verbose = options.get("verbose", False)
     results = []
     with fits.open(file_path) as hdu:
+        if (verbose):
+            print("Checking file {} ...".format(file_path))
         with warnings.catch_warnings(record=True) as warns:
             hdu.verify("fix+warn")
             if (warns and len(warns) > 0):
