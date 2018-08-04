@@ -14,7 +14,7 @@ import astrolabe_uploader.fits_ops as fo
 def main(argv):
     """ Perform verification actions on a FITS file or a directory of FITS files. """
     options = { "action": "check" }
-    program = "ALCheck"
+    program = "checker"
     version = "{} version {}".format(program, __version__)
 
     parser = argparse.ArgumentParser(
