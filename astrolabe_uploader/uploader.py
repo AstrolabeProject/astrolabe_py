@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Remove leftover debugging statement.
+#   Last Modified: Fix: bad name access for upload_only flag.
 #
 import os
 import sys
@@ -47,7 +47,7 @@ def do_file(ihelper, local_file, options):
         depending on the settings of the various arguments in the given 'options' dictionary.
     """
     verbose = options.get("verbose", False)
-    upload_only = options.get("upload-only", False)
+    upload_only = options.get("upload_only", False)
 
     to_path = options.get("to_path")
     if (not to_path):
