@@ -1,4 +1,4 @@
-Astrolabe-py library documentation
+Astrolabe_py library documentation
 ==================================
 
 

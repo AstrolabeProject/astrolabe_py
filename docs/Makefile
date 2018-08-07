@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = astrolabe-py
+SPHINXPROJ    = astrolabe_py
 SOURCEDIR     = source
 BUILDDIR      = build
 

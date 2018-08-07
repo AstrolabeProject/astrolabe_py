@@ -6,7 +6,7 @@ Astrolabe Python Library
 
 | This is a Python 3 library for curating image and data files for the `Astrolabe project <http://astrolabe.arizona.edu/>`_
 
-- Astrolabe-py contains scripts and modules to:
+- Astrolabe_py contains scripts and modules to:
 
   - Upload FITS files to iRods,
   - Extract metadata from FITS files and attach it to files in iRods,

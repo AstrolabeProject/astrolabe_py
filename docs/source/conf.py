@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'astrolabe-py'
+project = 'astrolabe_py'
 copyright = '2018, by the American Astronomical Society and the University of Arizona'
 author = 'Tom Hicks'
 
@@ -103,7 +103,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'astrolabe-pydoc'
+htmlhelp_basename = 'astrolabe_pydoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -130,7 +130,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'astrolabe-py.tex', 'astrolabe-py Documentation',
+    (master_doc, 'astrolabe_py.tex', 'astrolabe_py Documentation',
      'Tom Hicks', 'manual'),
 ]
 
@@ -140,7 +140,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'astrolabe-py', 'astrolabe-py Documentation',
+    (master_doc, 'astrolabe_py', 'astrolabe_py Documentation',
      [author], 1)
 ]
 
@@ -151,8 +151,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'astrolabe-py', 'astrolabe-py Documentation',
-     author, 'astrolabe-py', 'One line description of project.',
+    (master_doc, 'astrolabe_py', 'astrolabe_py Documentation',
+     author, 'astrolabe_py', 'One line description of project.',
      'Miscellaneous'),
 ]
 
