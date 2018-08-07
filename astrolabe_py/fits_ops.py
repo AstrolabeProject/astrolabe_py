@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Update for project rename.
+#   Last Modified: Fix: bad options default.
 #
 import os
 import sys
@@ -138,7 +138,7 @@ def execute_verify(options):
             print("Error: Specified file path '{}' is not a file or directory".format(file_path))
             sys.exit(30)
 
-def fits_verify(file_path, options=None):
+def fits_verify(file_path, options={}):
     """ Verify that the data in the given FITS file conforms to the FITS standard.
         Return a (possibly empty) list of verification warning strings.
     """
