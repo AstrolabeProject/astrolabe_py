@@ -2,15 +2,15 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Add ignore keys tests.
+#   Last Modified: Update for project rename.
 #
 import unittest
 from astropy.io import fits
 
 from context import fo                      # the module under test
 from context import fm
-from astrolabe_uploader import Metadatum
-from astrolabe_uploader.fits_meta import FILEPATH_KEY
+from astrolabe_py import Metadatum
+from astrolabe_py.fits_meta import FILEPATH_KEY
 
 def suite():
   suite = unittest.TestSuite()

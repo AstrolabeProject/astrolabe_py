@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe iRods Help class.
 #   Written by: Tom Hicks. 6/30/2018.
-#   Last Modified: Add mkdir abs and rel tests.
+#   Last Modified: Update for project rename.
 #
 import os
 import unittest
@@ -11,7 +11,7 @@ from irods.exception import CollectionDoesNotExist, DataObjectDoesNotExist
 
 from context import ih                      # the module under test
 from context import up
-from astrolabe_uploader import Metadatum
+from astrolabe_py import Metadatum
 
 def suite():
   suite = unittest.TestSuite()

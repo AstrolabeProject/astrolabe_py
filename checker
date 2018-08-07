@@ -2,14 +2,14 @@
 #
 # Program to perform verification or information operations on one or more FITS files.
 #   Written by: Tom Hicks. 8/3/2018.
-#   Last Modified: Initial creation by splitting tasks from uploader scripts.
+#   Last Modified: Update for project rename.
 #
 import argparse
 import os
 import sys
 
-from astrolabe_uploader import __version__
-import astrolabe_uploader.fits_ops as fo
+from astrolabe_py import __version__
+import astrolabe_py.fits_ops as fo
 
 def main(argv):
     """ Perform verification actions on a FITS file or a directory of FITS files. """

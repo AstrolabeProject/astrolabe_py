@@ -1,14 +1,14 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Add file echoing with verbose flag.
+#   Last Modified: Update for project rename.
 #
 import os
 import sys
 import warnings
 from astropy.io import fits
-import astrolabe_uploader.utils as utils
-from astrolabe_uploader.fits_meta import FitsMeta
+import astrolabe_py.utils as utils
+from astrolabe_py.fits_meta import FitsMeta
 
 # dictionary of alternates for standard FITS metadata keys
 _ALTERNATE_KEYS_MAP = {

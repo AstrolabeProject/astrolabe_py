@@ -2,13 +2,13 @@
 #
 # Python code to unit test the Astrolabe FITS Metadata module.
 #   Written by: Tom Hicks. 7/11/2018.
-#   Last Modified: Update for test resources directory.
+#   Last Modified: Update for project rename.
 #
 import json
 import unittest
 
 from context import fm                      # the module under test
-from astrolabe_uploader import Metadatum
+from astrolabe_py import Metadatum
 
 def suite():
   suite = unittest.TestSuite()

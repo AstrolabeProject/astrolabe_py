@@ -1,12 +1,12 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Add cd method. Rename method to get_dir. Add absolute flag to mkdir.
+  Last Modified: Update for project rename.
 """
 import os
 import logging
 import pathlib as pl
 from irods.session import iRODSSession
-from astrolabe_uploader import Metadatum
+from astrolabe_py import Metadatum
 
 logging.basicConfig(level=logging.ERROR)    # default logging configuration
 

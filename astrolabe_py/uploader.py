@@ -1,16 +1,16 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Fix: bad name access for upload_only flag.
+#   Last Modified: Update for project rename.
 #
 import os
 import sys
 import logging
 import fnmatch
 
-import astrolabe_uploader.fits_ops as fo
-import astrolabe_uploader.irods_help as ih
-import astrolabe_uploader.utils as utils
+import astrolabe_py.fits_ops as fo
+import astrolabe_py.irods_help as ih
+import astrolabe_py.utils as utils
 
 logging.basicConfig(level=logging.INFO)     # default logging configuration
 
