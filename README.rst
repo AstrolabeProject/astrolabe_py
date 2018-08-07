@@ -73,12 +73,6 @@ Documentation
 The User and API documentation is written in ReStructuredText, and can
 be built using `sphinx <http://www.sphinx-doc.org/>`_::
 
-    python setup.py userdoc
-    python setup.py apidoc
-
-The documentation will be generated and saved in ``userdoc/html/`` and
-``apidoc/html/``.
-
 
 License
 -------
