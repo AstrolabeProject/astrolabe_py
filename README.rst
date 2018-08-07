@@ -1,10 +1,10 @@
 Astrolabe Python Library
 ========================
 
-:Version: 0.0.11
+:Version: 0.0.12
 :Author: Tom Hicks <hickst@email.arizona.edu>
 
-| This is a Python 3.5+ library for curating image and data files for the `Astrolabe project <http://astrolabe.arizona.edu/>`_
+| This is a Python 3 library for curating image and data files for the `Astrolabe project <http://astrolabe.arizona.edu/>`_
 
 - Astrolabe-py contains scripts and modules to:
 
@@ -63,6 +63,8 @@ Uploader Script Options::
 Examples::
 
   uploader -v myDataDirectory
+  uploader --upload-only myImages/someImage.fits
+  uploader --keyfile just-these-keys.txt astrofiles
 
 
 Documentation
@@ -83,4 +85,4 @@ License
 
 Licensed under Apache License Version 2.0.
 
-Copyright 2018 by Astrolabe Project, American Astronomical Society and the University of Arizona.
+Copyright 2018 by Astrolabe Project: American Astronomical Society and the University of Arizona.

@@ -1,15 +1,13 @@
-.. astrolabe-py documentation master file, created by
-   sphinx-quickstart on Mon Aug  6 14:14:43 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Astrolabe-py library documentation
+==================================
 
-Welcome to astrolabe-py's documentation!
-========================================
+
+SubHeading
+^^^^^^^^^^
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
-
 
 
 Indices and tables
