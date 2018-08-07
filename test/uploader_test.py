@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Add test for metadata subset keyfile loading.
+#   Last Modified: Update for refactoring of ignored_keys.
 #
 import os
 import unittest
@@ -34,7 +34,8 @@ class ULTestCase(unittest.TestCase):
     cls.test_file = "resources/m13.fits"
     cls.test_file_md_count = 25             # added 23 to initial 2 metadata items
     cls.test_md_keysfile = "md-keys-subset.txt"
-    cls.test_md_keycount = 12               # test fileB only has 12 releveant keys
+    cls.test_md_keycount = 12               # test fileB only has 12 relevant keys
+    cls.ignored_keys = set(["COMMENT", "HISTORY"])
 
 
 class FileTestCase(ULTestCase):
@@ -78,8 +79,8 @@ class FileTestCase(ULTestCase):
     print()
     upfile = self.test_file
     basefile = os.path.basename(upfile)
-    options = { "images_path": upfile, "verbose": True }
-    rets = up.execute(options)
+    options = { "images_path": upfile, "verbose": True, "ignore_keys": self.ignored_keys }
+    rets = up.execute(options)              # the test call
     self.assertNotEqual(rets, None)
     self.assertEqual(len(rets), 1)
     self.assertTrue(all(rets))
@@ -94,8 +95,9 @@ class FileTestCase(ULTestCase):
     print()
     upfile = self.test_fileB
     basefile = os.path.basename(upfile)
-    options = { "images_path": upfile, "verbose": True, "keyfile": self.test_md_keysfile }
-    rets = up.execute(options)
+    options = { "images_path": upfile, "verbose": True,
+                "keyfile": self.test_md_keysfile, "ignore_keys": self.ignored_keys }
+    rets = up.execute(options)              # the test call
     self.assertNotEqual(rets, None)
     self.assertEqual(len(rets), 1)
     self.assertTrue(all(rets))
@@ -110,8 +112,9 @@ class FileTestCase(ULTestCase):
     print()
     upfile = self.test_file
     newname = "m13_copy2.fits"
-    options = { "images_path": upfile, "to_path": newname, "verbose": True }
-    rets = up.execute(options)
+    options = { "images_path": upfile, "to_path": newname, "verbose": True,
+                "ignore_keys": self.ignored_keys }
+    rets = up.execute(options)              # the test call
     self.assertNotEqual(rets, None)
     self.assertEqual(len(rets), 1)
     self.assertTrue(all(rets))
