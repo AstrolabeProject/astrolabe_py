@@ -12,13 +12,18 @@ Astrolabe Python Library
   - Extract metadata from FITS files and attach it to files in iRods,
 
 
-Building from Source
---------------------
+Python Build using Conda
+------------------------
 
-Use of this software requires `Python 3.6+`. Within a virtual environment, do::
+Building this software requires `Python 3.6+`. Assuming you have `Conda` installed,
+you can use it to build this project within a virtual environment::
 
+   git clone https://github.com/AstrolabeProject/astrolabe_py.git
+   source activate
+   conda create -n alpy python=3.6
+   conda activate alpy
+   cd astrolabe_py
    pip install -r requirements.txt
-   pip install .
 
 
 Running Tests
@@ -33,8 +38,14 @@ The tests can be run manually from the `test` subdirectory, as follows::
   python uploader.py
 
 
-Run the Scripts
----------------
+Build a Docker Image
+--------------------
+
+:TODO: Add this documentation.
+
+
+Run the Uploader Script
+-----------------------
 
 To run a script::
 
@@ -71,7 +82,7 @@ Documentation
 -------------
 
 The User and API documentation is written in ReStructuredText, and can
-be built using `sphinx <http://www.sphinx-doc.org/>`_::
+be built using `sphinx <http://www.sphinx-doc.org/>`_.
 
 
 License
