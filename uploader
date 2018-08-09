@@ -2,7 +2,7 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Update for project rename.
+#   Last Modified: Update usage for path to exclude dots paths.
 #
 import argparse
 import os
@@ -37,7 +37,8 @@ def main(argv):
                         help="a file specifying which metadata keys which should be processed")
 
     parser.add_argument("images_path",
-                        help="path to a FITS file or a directory of FITS files to be processed")
+                        help="""path to a FITS file or a directory of FITS files to be processed.
+                                (path may not contain '..' or '.')""")
 
     args = vars(parser.parse_args(argv))    # parse arguments into a dictionary
     args["ignore_keys"] = _IGNORE_KEYS      # add keys to ignore for this app
@@ -52,7 +53,7 @@ def main(argv):
 
     # insure that the given path refers to a readable file or valid directory
     images_path = args.get("images_path")
-    if (not os.path.exists(images_path)):   # alread insure non-empty by argparse
+    if (not os.path.exists(images_path)):   # already insured non-empty by argparse
         print("Error: Specified images path '{}' not found or is not readable".format(images_path))
         sys.exit(5)
 

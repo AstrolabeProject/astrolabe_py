@@ -1,10 +1,11 @@
 #
 # Module to provide general utility functions for Astrolabe code.
 #   Written by: Tom Hicks. 7/26/2018.
-#   Last Modified: Fix: bad call from last refactoring.
+#   Last Modified: Add utility to tell whether a path has dots.
 #
-import os
 import fnmatch
+import os
+import pathlib as pl
 
 # Default text file of desired metadata keys, one per line
 _DEFAULT_KEYS_FILE = "metadata-keys.txt"
@@ -35,3 +36,8 @@ def get_metadata_keys(options):
             return mdkeys_file.read().splitlines()
     else:
         return None
+
+def path_has_dots(apath):
+    """ Tell whether the given path contains '.' or '..' """
+    parts = list(pl.PurePath(apath).parts)
+    return ((apath == ".") or (".." in parts) or ("." in parts))

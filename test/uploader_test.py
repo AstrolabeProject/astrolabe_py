@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Update for refactoring of ignored_keys.
+#   Last Modified: Add tests for paths containing dots.
 #
 import os
 import unittest
@@ -47,6 +47,43 @@ class FileTestCase(ULTestCase):
 
   def tearDown(self):
     self.ihelper.disconnect()
+
+
+  def test_execute_dot1(self):
+    "Throws exception on image path of a single dot"
+    with self.assertRaises(SystemExit):
+      options = { "images_path": ".", "verbose": True }
+      up.execute(options)
+
+  def test_execute_dots2(self):
+    "Throws exception on image path of a double dot"
+    with self.assertRaises(SystemExit):
+      options = { "images_path": "..", "verbose": True }
+      up.execute(options)
+
+  def test_execute_dots2_leading(self):
+    "Throws exception on image path with double leading dots"
+    with self.assertRaises(SystemExit):
+      options = { "images_path": "../resources", "verbose": True }
+      up.execute(options)
+
+  def test_execute_2dots_inner(self):
+    "Throws exception on image path with embedded double dots"
+    with self.assertRaises(SystemExit):
+      options = { "images_path": "resources/../test2", "verbose": True }
+      up.execute(options)
+
+  def test_execute_dots2_trailing(self):
+    "Throws exception on image path with trailing double dots"
+    with self.assertRaises(SystemExit):
+      options = { "images_path": "resources/test2/..", "verbose": True }
+      up.execute(options)
+
+  def test_execute_dots_mixed(self):
+    "Throws exception on image path with mixed single and double dots"
+    with self.assertRaises(SystemExit):
+      options = { "images_path": "./..", "verbose": True }
+      up.execute(options)
 
 
   def test_execute_dir_empty(self):

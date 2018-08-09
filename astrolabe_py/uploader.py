@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Update for project rename.
+#   Last Modified: Check for and exclude dots paths.
 #
 import os
 import sys
@@ -32,6 +32,10 @@ def execute(options):
 
     # execute action for a single file or a directory of files
     images_path = options.get("images_path")
+    if (utils.path_has_dots(images_path)):
+        print("Error: Images path argument may not contain '..' or '.'")
+        sys.exit(10)
+
     if (os.path.isfile(images_path)):
         return [ do_file(ihelper, images_path, options) ]
     else:
@@ -39,7 +43,7 @@ def execute(options):
             return do_tree(ihelper, images_path, options)
         else:
             print("Error: Specified images path '{}' is not a file or directory".format(images_path))
-            sys.exit(10)
+            sys.exit(11)
 
 
 def do_file(ihelper, local_file, options):
@@ -54,15 +58,15 @@ def do_file(ihelper, local_file, options):
         to_path = os.path.basename(local_file)
 
     if (verbose):
-        print("Uploading file {} to {} ...".format(local_file, to_path))
+        print("Uploading file {} to {}".format(local_file, to_path))
     ihelper.put_file(local_file, to_path)
 
     if (not upload_only):
         if (verbose):
-            print("Extracting metadata from file {} ...".format(local_file))
+            print("Extracting metadata from file {}".format(local_file))
         metadata = fo.fits_metadata(local_file, options)
         if (verbose):
-            print("Attaching metadata to file {} ...".format(to_path))
+            print("Attaching metadata to file {}".format(to_path))
         ihelper.put_metaf(metadata, to_path)
 
     return True
