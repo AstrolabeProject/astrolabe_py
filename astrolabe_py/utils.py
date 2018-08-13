@@ -1,7 +1,7 @@
 #
 # Module to provide general utility functions for Astrolabe code.
 #   Written by: Tom Hicks. 7/26/2018.
-#   Last Modified: Add utility to tell whether a path has dots.
+#   Last Modified: Remove unused, leftover code.
 #
 import fnmatch
 import os
@@ -20,8 +20,6 @@ def is_fits_file(fyl):
 
 def filter_file_tree(root_dir):
     """ Generator to yield all FITS files in the file tree under the given root directory. """
-    fits_pat = "*.fits"                     # pattern for identifying FITS files
-    gzfits_pat = "*.fits.gz"                # pattern for identifying gzipped FITS files
     for root, dirs, files in os.walk(root_dir):
         for fyl in files:
             if (is_fits_file(fyl)):
