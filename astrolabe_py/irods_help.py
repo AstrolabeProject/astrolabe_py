@@ -1,14 +1,17 @@
 """
 Helper class for iRods commands: manipulate the filesystem, including metadata.
-  Last Modified: Update for project rename.
+  Last Modified: Port updates from glue irods project: reformats, adds methods to test iRods node types.
 """
 import os
 import logging
 import pathlib as pl
 from irods.session import iRODSSession
+from irods.collection import iRODSCollection
+from irods.data_object import iRODSDataObject
 from astrolabe_py import Metadatum
 
 logging.basicConfig(level=logging.ERROR)    # default logging configuration
+
 
 class IrodsHelper:
     """ Helper class for iRods commands """
@@ -19,6 +22,7 @@ class IrodsHelper:
     def make_session(**kwargs):
         """ Create and return an iRods session using the given keyword arguments. """
         try:
+            uid = kwargs["uid"]
             env_file = kwargs["irods_env_file"]
         except KeyError:
             try:
@@ -33,6 +37,22 @@ class IrodsHelper:
         if (session):
             session.cleanup()
 
+    @staticmethod
+    def is_collection(node):
+        return isinstance(node, iRODSCollection)
+
+    @staticmethod
+    def is_dataobject(node):
+        return isinstance(node, iRODSDataObject)
+
+    @staticmethod
+    def to_dirpath(dir_path):
+        """ Add a trailing slash to the given directory path to mark it is an iRods
+            directory path. This is required by the 'put' command, for example. """
+        if (str(dir_path).endswith("/")):
+            return str(dir_path)
+        else:
+            return "{}/".format(dir_path)
 
     def __init__(self, options={}, connect=True):
         self._cwdpath = None                # current working directory - a PurePath
@@ -47,7 +67,6 @@ class IrodsHelper:
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.cleanup()
-
 
     def abs_path(self, path):
         """ Return an iRods path for the given path relative to the users root directory. """
@@ -89,7 +108,7 @@ class IrodsHelper:
     def cd_down(self, subdir):
         """ Change the current working directory to the given subdirectory. """
         if (self._cwdpath):
-            self._cwdpath = self._cwdpath / subdir # NB: maintain PurePath
+            self._cwdpath = self._cwdpath / subdir  # NB: maintain PurePath
 
     def cd_root(self):
         """ Reset the current working directory to the users root directory. """
@@ -167,9 +186,9 @@ class IrodsHelper:
             OR relative to the users root directory, if the absolute argument is True.
         """
         if (absolute):
-            dirpath = self.abs_path(dir_path) # path is relative to root dir
+            dirpath = self.abs_path(dir_path)  # path is relative to root dir
         else:
-            dirpath = self.rel_path(dir_path) # path is relative to current working dir
+            dirpath = self.rel_path(dir_path)  # path is relative to current working dir
         return self._session.collections.get(dirpath)
 
     def getf(self, file_path, absolute=False):
@@ -177,9 +196,9 @@ class IrodsHelper:
             OR relative to the users root directory, if the absolute argument is True.
         """
         if (absolute):
-            filepath = self.abs_path(file_path) # path is relative to root dir
+            filepath = self.abs_path(file_path)  # path is relative to root dir
         else:
-            filepath = self.rel_path(file_path) # path is relative to current working dir
+            filepath = self.rel_path(file_path)  # path is relative to current working dir
         return self._session.data_objects.get(filepath)
 
     def get_metac(self, dir_path, absolute=False):
@@ -208,9 +227,9 @@ class IrodsHelper:
             if the absolute argument is True. Returns the iRods ID of the collection.
         """
         if (absolute):
-            dirpath = self.abs_path(dir_path) # path is relative to root dir
+            dirpath = self.abs_path(dir_path)  # path is relative to root dir
         else:
-            dirpath = self.rel_path(dir_path) # path is relative to current working dir
+            dirpath = self.rel_path(dir_path)  # path is relative to current working dir
         return self._session.collections.create(dirpath)
 
     def put_file(self, local_file, file_path, absolute=False):
@@ -219,9 +238,9 @@ class IrodsHelper:
             if the absolute argument is True.
         """
         if (absolute):
-            filepath = self.abs_path(file_path) # path is relative to root dir
+            filepath = self.abs_path(file_path)  # path is relative to root dir
         else:
-            filepath = self.rel_path(file_path) # path is relative to current working dir
+            filepath = self.rel_path(file_path)  # path is relative to current working dir
         self._session.data_objects.put(local_file, filepath)
 
     def put_metaf(self, metadata, file_path, absolute=False):
@@ -269,14 +288,6 @@ class IrodsHelper:
         else:
             self._root = None
         self.cd_root()                      # cd back to root after changing root dir
-
-    def to_dirpath(self, dir_path):
-        """ Add a trailing slash to the given directory path to mark it is an iRods
-            directory path. This is required by the 'put' command, for example. """
-        if (str(dir_path).endswith("/")):
-            return str(dir_path)
-        else:
-            return "{}/".format(dir_path)
 
     def walk(self, topdown=True):
         """ Collection tree generator. For each subcollection in the dir tree,
