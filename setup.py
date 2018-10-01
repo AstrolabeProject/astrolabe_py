@@ -1,15 +1,24 @@
+#!/usr/bin/env python
+#
+# Setup script.
+#   Written by: Tom Hicks. 6/22/2018.
+#   Last Modified: Read version number from version file.
+#
 import os
 import re
 import sys
 from setuptools import setup, find_packages
 
 # Get the version number from the package itself
-version = re.search(
-    '^__version__\s*=\s*"(.*)"',
-    open('astrolabe_py/__init__.py').read(),
-    re.M
-).group(1)
+# version = re.search(
+#     '^__version__\s*=\s*"(.*)"',
+#     open('astrolabe_py/__init__.py').read(),
+#     re.M
+# ).group(1)
 
+# Get the version number from the version file
+with open('astrolabe_py/version.py') as vfile:
+    exec(vfile.read())
 
 # Read in the long description from the README file
 with open("README.rst", "r", encoding="UTF-8") as rm:
