@@ -44,6 +44,11 @@ setup(
     package_data ={
         'astrolabe_py': ['data/*']
     },
+    install_requires=[
+        'astropy>=3.0.0',
+        'python-irodsclient>=0.0.8'
+    ],
+    python_requires='~=3.5',
     # scripts=scripts,
     scripts=[ "checker", "uploader" ],
     classifiers=[
