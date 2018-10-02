@@ -2,7 +2,7 @@
 #
 # Setup script.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Read version number from version file.
+#   Last Modified: Fix several errors found while creating dist.
 #
 import os
 import re
@@ -32,10 +32,11 @@ with open("README.rst", "r", encoding="UTF-8") as rm:
 
 setup(
     name="astrolabe_py",
-    version=version,
+    version=__version__,
     author="Tom Hicks",
-    author_email="hickst@email.arizona..edu",
+    author_email="hickst@email.arizona.edu",
     description="Tools for working with Astrolabe data.",
+    license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/AstrolabeProject/astrolabe_py",
@@ -44,14 +45,14 @@ setup(
         'astrolabe_py': ['data/*']
     },
     # scripts=scripts,
-    scripts=[ "checker", "uploader" ]
+    scripts=[ "checker", "uploader" ],
     classifiers=[
         'Development Status :: 1 - Planning',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: Apache Software License :: 2',
+        'License :: OSI Approved :: Apache Software License',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3',
         'Topic :: System :: Archiving',
