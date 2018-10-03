@@ -1,7 +1,7 @@
 Astrolabe Python Library
 ========================
 
-:Version: 0.0.12
+:Version: 0.0.20
 :Author: Tom Hicks <hickst@email.arizona.edu>
 
 | This is a Python 3 library for curating image and data files for the `Astrolabe project <http://astrolabe.arizona.edu/>`_

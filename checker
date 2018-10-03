@@ -2,23 +2,20 @@
 #
 # Program to perform verification or information operations on one or more FITS files.
 #   Written by: Tom Hicks. 8/3/2018.
-#   Last Modified: Read version number from version file.
+#   Last Modified: Import VERSION number from version file.
 #
 import argparse
 import os
 import sys
 
 import astrolabe_py.fits_ops as fo
-
-# Get the version number from the version file
-with open('astrolabe_py/version.py') as vfile:
-    exec(vfile.read())
+from astrolabe_py.version import VERSION
 
 def main(argv):
     """ Perform verification actions on a FITS file or a directory of FITS files. """
     options = { "action": "check" }
     program = "checker"
-    version = "{} version {}".format(program, __version__)
+    version = "{} version {}".format(program, VERSION)
 
     parser = argparse.ArgumentParser(
         prog=program,

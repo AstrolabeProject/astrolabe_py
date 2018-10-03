@@ -2,21 +2,14 @@
 #
 # Setup script.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Fix several errors found while creating dist.
+#   Last Modified: Figure out requires. Redo VERSION reading.
 #
 import os
 import re
 import sys
 from setuptools import setup, find_packages
 
-# Get the version number from the package itself
-# version = re.search(
-#     '^__version__\s*=\s*"(.*)"',
-#     open('astrolabe_py/__init__.py').read(),
-#     re.M
-# ).group(1)
-
-# Get the version number from the version file
+# Eval the VERSION number from the version file
 with open('astrolabe_py/version.py') as vfile:
     exec(vfile.read())
 
@@ -32,7 +25,7 @@ with open("README.rst", "r", encoding="UTF-8") as rm:
 
 setup(
     name="astrolabe_py",
-    version=__version__,
+    version=VERSION,
     author="Tom Hicks",
     author_email="hickst@email.arizona.edu",
     description="Tools for working with Astrolabe data.",
@@ -45,10 +38,10 @@ setup(
         'astrolabe_py': ['data/*']
     },
     install_requires=[
-        'astropy>=3.0.0',
+        'astropy>=3.0.3',
         'python-irodsclient>=0.0.8'
     ],
-    python_requires='~=3.5',
+    python_requires='~=3.6',
     # scripts=scripts,
     scripts=[ "checker", "uploader" ],
     classifiers=[

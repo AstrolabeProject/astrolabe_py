@@ -2,25 +2,22 @@
 #
 # Program to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 7/18/2018.
-#   Last Modified: Read version number from version file.
+#   Last Modified: Import VERSION number from version file.
 #
 import argparse
 import os
 import sys
 
 import astrolabe_py.uploader as up
+from astrolabe_py.version import VERSION
 
 # set of metadata keys to ignore when extracting metadata from FITS files
 _IGNORE_KEYS = set([ "COMMENT", "HISTORY" ])
 
-# Get the version number from the version file
-with open('astrolabe_py/version.py') as vfile:
-    exec(vfile.read())
-
 def main(argv):
     """ FITS file metadata extraction and upload of a file or directory of files. """
     program = "uploader"
-    version = "{} version {}".format(program, __version__)
+    version = "{} version {}".format(program, VERSION)
 
     parser = argparse.ArgumentParser(
         prog=program,
