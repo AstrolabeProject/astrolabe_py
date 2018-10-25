@@ -1,0 +1,11 @@
+TODO
+====
+
+Add Tests for
+  - get_dir
+  - cd_up
+  - cd_down
+
+Add "fix" operation to fits_ops
+Add exists?"
+Walk subdirs/child files from iRods existing files?
