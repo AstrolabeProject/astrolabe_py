@@ -2,7 +2,6 @@ alabaster==0.7.11
 asn1crypto==0.24.0
 astropy==3.0.3
 Babel==2.6.0
-certifi==2018.8.13
 cffi==1.11.5
 chardet==3.0.4
 cryptography==2.3
@@ -20,7 +19,7 @@ Pygments==2.2.0
 pyOpenSSL==18.0.0
 pyparsing==2.2.0
 PySocks==1.6.8
-python-irodsclient==0.8.0
+python-irodsclient==0.8.1
 pytz==2018.5
 requests==2.19.1
 six==1.11.0

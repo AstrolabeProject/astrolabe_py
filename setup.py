@@ -39,7 +39,7 @@ setup(
     },
     install_requires=[
         'astropy>=3.0.3',
-        'python-irodsclient>=0.0.8'
+        'python-irodsclient>=0.8.1'
     ],
     python_requires='~=3.6',
     # scripts=scripts,
