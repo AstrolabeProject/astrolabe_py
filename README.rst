@@ -35,7 +35,7 @@ The tests can be run manually from the `test` subdirectory, as follows::
   python fits_ops_test.py
   python fits_meta_test.py
   python irods_help_test.py
-  python uploader.py
+  python uploader_test.py
 
 
 Build a Docker Image
