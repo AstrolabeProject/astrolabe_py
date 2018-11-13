@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Check for and exclude dots paths.
+#   Last Modified: Redo do_tree to handle path for source directory.
 #
 import os
 import sys
@@ -33,7 +33,7 @@ def execute(options):
     # execute action for a single file or a directory of files
     images_path = options.get("images_path")
     if (utils.path_has_dots(images_path)):
-        print("Error: Images path argument may not contain '..' or '.'")
+        print("Error: Images path argument must be asbolute; it may not contain '..' or '.'")
         sys.exit(10)
 
     if (os.path.isfile(images_path)):
@@ -59,7 +59,7 @@ def do_file(ihelper, local_file, options):
 
     if (verbose):
         print("Uploading file {} to {}".format(local_file, to_path))
-    ihelper.put_file(local_file, to_path)
+    ihelper.put_file(local_file, to_path, absolute=True)
 
     if (not upload_only):
         if (verbose):
@@ -72,18 +72,23 @@ def do_file(ihelper, local_file, options):
     return True
 
 
-def do_tree(ihelper, root_path, options):
+def do_tree(ihelper, root_node, options):
     """ Walk the local filesystem tree from the given root_node and process any FITS files.
         The walk creates a parallel tree in the iRods Astrolabe area and calls do_file to
         upload the files (and possibly their metadata) to the corresponding iRods directories.
     """
+    root_path = os.path.normpath(root_node) # remove any trailing slashes
+    local_prefix = os.path.split(root_path)[0] # find local path prefix preceding root node
+
     results = []
     for root, dirs, files in os.walk(root_path):
-        ihelper.mkdir(root, absolute=True)  # make corresponding iRods directory
-        ihelper.cd(root, absolute=True)     # make it the current working directory
+        idir = os.path.relpath(root, local_prefix) # strip off local path prefix
+        ihelper.mkdir(idir, absolute=True) # make corresponding iRods directory
         for afile in files:                 # for files at this level
             if (utils.is_fits_file(afile)): # if a file is a FITS file
-                local_filepath = os.path.join(root, afile)
+                local_filepath = os.path.join(root, afile) # local source path
+                to_path = os.path.join(idir, afile) # irods target path
+                options["to_path"] = to_path        # pass target path in option dict
                 results.append(do_file(ihelper, local_filepath, options))
     return results
 
