@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Redo do_tree with more functional and flexible design.
+#   Last Modified: Update single file upload for previous functional changes.
 #
 import os
 import sys
@@ -37,8 +37,10 @@ def execute(options):
         sys.exit(10)
 
     if (os.path.isfile(images_path)):
-        # TODO: update this call to include a to_path
-        return [ do_file(ihelper, images_path, options) ]
+        to_path = options.get("to_path")    # allow for future expansion
+        if (not to_path):
+            to_path = os.path.basename(images_path)
+        return [ do_file(ihelper, images_path, to_path, options) ]
     else:
         if (os.path.isdir(images_path)):
             return do_tree(ihelper, images_path, options)
