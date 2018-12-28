@@ -1,7 +1,7 @@
 #
 # Module to extract metadata and upload one or more FITS files to iRods.
 #   Written by: Tom Hicks. 7/19/2018.
-#   Last Modified: Update single file upload for previous functional changes.
+#   Last Modified: Maintain return of same truth vector as previous version.
 #
 import os
 import sys
@@ -93,8 +93,7 @@ def do_tree(ihelper, root_node, options):
     target_paths = make_target_paths(suffix_paths, options)
 
     # pair up the local source file paths and the iRods target file paths, then upload the files
-    for pair in zip(source_paths, target_paths):
-        do_file(ihelper, pair[0], pair[1], options)
+    return [ do_file(ihelper, pair[0], pair[1], options) for pair in zip(source_paths, target_paths) ]
 
 
 def ensure_astrolabe_root(ihelper):
