@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Add tests for paths containing dots.
+#   Last Modified: Update tests for Cyverse metadata changes.
 #
 import os
 import unittest
@@ -30,11 +30,11 @@ class ULTestCase(unittest.TestCase):
     cls.empty_dir = "resources/empty_dir"
     cls.empty2_dir = "resources/test2"
     cls.test_fileB = "resources/cvnidwabcut.fits"
-    cls.test_fileB_md_count = 64             # added 62 to initial 2 metadata items
+    cls.test_fileB_md_count = 63            # added 62 to initial 1 cyverse metadata item
     cls.test_file = "resources/m13.fits"
-    cls.test_file_md_count = 25             # added 23 to initial 2 metadata items
+    cls.test_file_md_count = 24             # added 23 to initial 1 cyverse metadata item
     cls.test_md_keysfile = "md-keys-subset.txt"
-    cls.test_md_keycount = 12               # test fileB only has 12 relevant keys
+    cls.test_md_keycount = 11               # test fileB has 10 relevant keys + 1 cyverse metadata
     cls.ignored_keys = set(["COMMENT", "HISTORY"])
 
 
