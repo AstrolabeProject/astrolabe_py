@@ -31,7 +31,7 @@ setup(
     description="Tools for working with Astrolabe data.",
     license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     url="https://github.com/AstrolabeProject/astrolabe_py",
     packages=find_packages(exclude=['test.*']),
     package_data ={

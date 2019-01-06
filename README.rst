@@ -1,15 +1,29 @@
 Astrolabe Python Library
 ========================
 
-:Version: 0.0.20
+.. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
+    :target: http://www.astropy.org
+    :alt: Powered by Astropy Badge
+
+:Version: 1.0.0
 :Author: Tom Hicks <hickst@email.arizona.edu>
 
 | This is a Python 3 library for curating image and data files for the `Astrolabe project <http://astrolabe.arizona.edu/>`_
 
 - Astrolabe_py contains scripts and modules to:
 
-  - Upload FITS files to iRods,
-  - Extract metadata from FITS files and attach it to files in iRods,
+  - Check FITS file metadata for validity,
+  - Show FITS file HDU information,
+  - Upload FITS files to iRods, optionally extracting FITS metadata and attaching
+    it to the uploaded files in iRods.
+
+
+Installation
+------------
+
+Install via `PyPi <https://pypi.org/project/astrolabe-py/>`_
+
+   pip install astrolabe-py
 
 
 Python Build using Conda
@@ -38,22 +52,10 @@ The tests can be run manually from the `test` subdirectory, as follows::
   python uploader_test.py
 
 
-Build a Docker Image
---------------------
-
-:TODO: Add this documentation.
-
-
-Run the Uploader Script
------------------------
-
-To run a script::
-
-   python uploader
-
+Running the Uploader Script
+---------------------------
 
 Uploader Script Options::
-
 
   usage: uploader [-h] [-v] [-u] [--version] [--keyfile [metadata-keyfile]] images_path
 
@@ -70,7 +72,6 @@ Uploader Script Options::
      --keyfile [metadata-keyfile]
                            a file specifying which metadata keys which should be processed
 
-
 Examples::
 
   uploader -v myDataDirectory
@@ -78,11 +79,35 @@ Examples::
   uploader --keyfile just-these-keys.txt astrofiles
 
 
-Documentation
--------------
+Running the Checker Script
+--------------------------
 
-The User and API documentation is written in ReStructuredText, and can
-be built using `sphinx <http://www.sphinx-doc.org/>`_.
+Checker Script Options::
+
+  usage: checker [-h] [-a {check,info}] [-v] [--version] images_path
+
+  Perform verification actions on a FITS file or a directory of FITS files OR
+  Show HDU info for the specified FITS file or directory of FITS files
+
+  positional arguments:
+    images_path           path to a FITS file or a directory of FITS files to be processed
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    -a {check,info}, --action {check,info}
+                          action to perform on FITS file(s): validate or show HDU info
+    --version             show program's version number and exit
+
+Examples::
+
+  checker myDataDirectory
+  checker -a check myDataDirectory
+
+  checker myImages/someImage.fits
+  checker -a check myImages/someImage.fits
+
+  checker -a info myDataDirectory
+  checker -a info myImages/someImage.fits
 
 
 License
