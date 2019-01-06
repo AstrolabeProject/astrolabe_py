@@ -24,9 +24,9 @@ copyright = '2018, by the American Astronomical Society and the University of Ar
 author = 'Tom Hicks'
 
 # The short X.Y version
-version = '0.24'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = '0.0.24'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
