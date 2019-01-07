@@ -29,7 +29,7 @@ Install via `PyPi <https://pypi.org/project/astrolabe-py/>`_
 Python Build using Conda
 ------------------------
 
-Building this software requires `Python 3.6+`. Assuming you have `Conda` installed,
+Building this software requires ``Python 3.6+``. Assuming you have ``Conda`` installed,
 you can use it to build this project within a virtual environment::
 
    git clone https://github.com/AstrolabeProject/astrolabe_py.git
@@ -43,7 +43,7 @@ you can use it to build this project within a virtual environment::
 Running Tests
 -------------
 
-The tests can be run manually from the `test` subdirectory, as follows::
+The tests can be run manually from the ``test`` subdirectory, as follows::
 
   cd test
   python fits_ops_test.py
