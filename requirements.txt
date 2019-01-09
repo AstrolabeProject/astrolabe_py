@@ -21,7 +21,7 @@ pyparsing==2.2.0
 PySocks==1.6.8
 python-irodsclient==0.8.1
 pytz==2018.5
-requests==2.19.1
+requests==2.21.0
 six==1.11.0
 snowballstemmer==1.2.1
 Sphinx==1.7.6
