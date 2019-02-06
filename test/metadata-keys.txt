@@ -8,13 +8,13 @@ publisher_dataset_identifier
 access_url
 access_format
 estimated_download_size
-right_ascension
-declination
+ra
+dec
 spatial_extent
 spatial_coverage
 spatial_resolution
-spatial_axis_1_number_bins
-spatial_axis_2_number_bins
+sxel1
+sxel2
 CRPIX1
 CRPIX2
 rotation

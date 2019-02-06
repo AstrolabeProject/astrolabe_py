@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Fix: bad options default.
+#   Last Modified: Add VO field labels as alternate keys.
 #
 import os
 import sys
@@ -12,13 +12,21 @@ from astrolabe_py.fits_meta import FitsMeta
 
 # dictionary of alternates for standard FITS metadata keys
 _ALTERNATE_KEYS_MAP = {
-    "NAXIS1": "spatial_axis_1_number_bins",
-    "NAXIS2": "spatial_axis_2_number_bins",
-    "DATE-OBS": "start_time",
-    "INSTRUME": "facility_name",
-    "TELESCOP": "instrument_name",
-    "OBSERVER": "obs_creator_name",
-    "OBJECT": "obs_title"
+    "ra"      : "s_ra",                     # WWT -> VO
+    "dec"     : "s_dec",                    # WWT -> VO
+    "DATE-BEG": "t_min",                    # FITS -> VO
+    "DATE-END": "t_max",                    # FITS -> VO
+    "DATE-OBS": "t_min",                    # FITS -> VO
+    "INSTRUME": "instrument_name",          # FITS -> VO
+    "MJD-END" : "t_max",                    # FITS -> VO
+    "MJD-OBS" : "t_min",                    # FITS -> VO
+    "NAXIS1"  : "sxel1",                    # FITS -> VO
+    "NAXIS2"  : "sxel2",                    # FITS -> VO
+    "OBJECT"  : "target_name",              # FITS -> VO
+    "OBSERVER": "obs_creator_name",         # FITS -> VO
+    "TELESCOP": "facility_name",            # FITS -> VO
+    "TSTART"  : "t_min",                    # FITS -> VO
+    "TSTOP"   : "t_max"                     # FITS -> VO
 }
 
 # dictionary mapping CTYPE* key names to their associated CRVAL* key names
@@ -72,8 +80,8 @@ def fits_metadata(file_path, options={}):
 def _post_process_metadata(fm, keys_subset):
     """ Post process the accumulated metadata; handle a couple of special cases. """
     for item in fm.metadata():              # check all metadata items for special cases
-        _handle_alternate_key(fm, item, keys_subset) # fm and key_subset modified by side-effect
         _handle_ctype_mapping(fm, item, keys_subset) # fm and key_subset modified by side-effect
+        _handle_alternate_key(fm, item, keys_subset) # fm and key_subset modified by side-effect
 
     if (keys_subset):                       # if user requested only a subset of the metadata
         return fm.filter_by_keys(keys_subset) # filter the metadata by the keys subset
@@ -108,9 +116,9 @@ def _handle_ctype_mapping(fm, item, keys_subset):
     crval_key = _CTYPES.get(item.keyword)   # lookup this item's key in CTYPE dictionary
     if (crval_key):                         # if this item key is a CTYPE key
         if "RA" in item.value:              # if this CTYPE item's value contains RA
-            interp_key = "right_ascension"     # the 'interpretation' of the CRVAL value
+            interp_key = "ra"               # the 'interpretation' of the CRVAL value
         elif "DEC" in item.value:           # else if this CTYPE item's value contains DEC
-            interp_key = "declination"         # the 'interpretation' of the CRVAL value
+            interp_key = "dec"              # the 'interpretation' of the CRVAL value
         else:                               # we only handle these interpretations, so far
             interp_key = None
 

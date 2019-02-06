@@ -1,6 +1,6 @@
 filepath
-right_ascension
-declination
+ra
+dec
 CRPIX1
 CRPIX2
 DATEREF
@@ -12,4 +12,4 @@ CRVAL2
 facility_name
 instrument_name
 obs_creator_name
-obs_title
+target_name
