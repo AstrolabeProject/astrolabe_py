@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 7/25/2018.
-#   Last Modified: Update tests for Cyverse metadata changes.
+#   Last Modified: Update tests for VO metadata additions.
 #
 import os
 import unittest
@@ -15,6 +15,7 @@ from context import up                      # the module under test
 def suite():
   suite = unittest.TestSuite()
   suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(FileTestCase))
+  suite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(MetadataTestCase))
   return suite
 
 
@@ -30,11 +31,13 @@ class ULTestCase(unittest.TestCase):
     cls.empty_dir = "resources/empty_dir"
     cls.empty2_dir = "resources/test2"
     cls.test_fileB = "resources/cvnidwabcut.fits"
-    cls.test_fileB_md_count = 63            # added 62 to initial 1 cyverse metadata item
+    cls.test_fileB_md_count = 66            # 55 native + 11 generated entries
+    cls.test_fileB_hist_count = 2           # 2 HISTORY entries (often filtered out)
     cls.test_file = "resources/m13.fits"
-    cls.test_file_md_count = 24             # added 23 to initial 1 cyverse metadata item
+    cls.test_file_md_count = 27             # 23 native + 7 generated entries
+    cls.test_file_auto_added = 2            # right_ascension & declination added automatically
     cls.test_md_keysfile = "md-keys-subset.txt"
-    cls.test_md_keycount = 11               # test fileB has 10 relevant keys + 1 cyverse metadata
+    cls.test_md_keycount = 13               # metadata key file contains 13 keys
     cls.ignored_keys = set(["COMMENT", "HISTORY"])
 
 
@@ -111,6 +114,17 @@ class FileTestCase(ULTestCase):
     self.assertEqual(len(rets), self.test_dir_fits_count)
     self.assertTrue(all(rets))
 
+
+class MetadataTestCase(ULTestCase):
+
+  def setUp(self):
+    "Initialize the test case"
+    self.ihelper = ih.IrodsHelper()
+    self.assertTrue(self.ihelper.is_connected())
+
+  def tearDown(self):
+    self.ihelper.disconnect()
+
   def test_execute_file1(self):
     "Process a single FITS file to the astrolabe directory"
     print()
@@ -125,6 +139,7 @@ class FileTestCase(ULTestCase):
     md = self.ihelper.get_metaf("{}/{}".format(self.root_dir, basefile))
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
+    # [print(item) for item in md]            # DEBUGGING
     self.assertEqual(len(md), self.test_file_md_count)
 
   def test_execute_file1_mdsubset(self):
@@ -142,7 +157,8 @@ class FileTestCase(ULTestCase):
     md = self.ihelper.get_metaf("{}/{}".format(self.root_dir, basefile))
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
-    self.assertEqual(len(md), self.test_md_keycount)
+    # [print(item) for item in md]            # DEBUGGING
+    self.assertTrue(len(md) >= self.test_md_keycount) # iRods adds fields to metadata
 
   def test_execute_file1_rename(self):
     "Process a single FITS file to the astrolabe directory with rename"
@@ -159,6 +175,7 @@ class FileTestCase(ULTestCase):
     md = self.ihelper.get_metaf("{}/{}".format(self.root_dir, newname))
     self.assertNotEqual(md, None)
     self.assertEqual(type(md), list)
+    # [print(item) for item in md]            # DEBUGGING
     self.assertEqual(len(md), self.test_file_md_count)
 
 
