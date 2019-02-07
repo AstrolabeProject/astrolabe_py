@@ -1,7 +1,7 @@
 #
 # Module to view, extract, and/or verify metadata from one or more FITS files.
 #   Written by: Tom Hicks. 4/24/2018.
-#   Last Modified: Add VO field labels as alternate keys.
+#   Last Modified: Sequence the special cases. Revert to using right_ascension & declination names.
 #
 import os
 import sys
@@ -12,8 +12,8 @@ from astrolabe_py.fits_meta import FitsMeta
 
 # dictionary of alternates for standard FITS metadata keys
 _ALTERNATE_KEYS_MAP = {
-    "ra"      : "s_ra",                     # WWT -> VO
-    "dec"     : "s_dec",                    # WWT -> VO
+    "right_ascension": "s_ra",              # calculated -> VO
+    "declination": "s_dec",                 # calculated -> VO
     "DATE-BEG": "t_min",                    # FITS -> VO
     "DATE-END": "t_max",                    # FITS -> VO
     "DATE-OBS": "t_min",                    # FITS -> VO
@@ -79,8 +79,10 @@ def fits_metadata(file_path, options={}):
 
 def _post_process_metadata(fm, keys_subset):
     """ Post process the accumulated metadata; handle a couple of special cases. """
-    for item in fm.metadata():              # check all metadata items for special cases
+    for item in fm.metadata():              # check all metadata items for CTYPE special cases
         _handle_ctype_mapping(fm, item, keys_subset) # fm and key_subset modified by side-effect
+
+    for item in fm.metadata():              # check all metadata items for alternate keys
         _handle_alternate_key(fm, item, keys_subset) # fm and key_subset modified by side-effect
 
     if (keys_subset):                       # if user requested only a subset of the metadata
@@ -116,9 +118,9 @@ def _handle_ctype_mapping(fm, item, keys_subset):
     crval_key = _CTYPES.get(item.keyword)   # lookup this item's key in CTYPE dictionary
     if (crval_key):                         # if this item key is a CTYPE key
         if "RA" in item.value:              # if this CTYPE item's value contains RA
-            interp_key = "ra"               # the 'interpretation' of the CRVAL value
+            interp_key = "right_ascension"  # the 'interpretation' of the CRVAL value
         elif "DEC" in item.value:           # else if this CTYPE item's value contains DEC
-            interp_key = "dec"              # the 'interpretation' of the CRVAL value
+            interp_key = "declination"      # the 'interpretation' of the CRVAL value
         else:                               # we only handle these interpretations, so far
             interp_key = None
 
