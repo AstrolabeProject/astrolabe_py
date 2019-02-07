@@ -2,7 +2,7 @@
 #
 # Python code to unit test the Astrolabe FITS Operations module.
 #   Written by: Tom Hicks. 6/22/2018.
-#   Last Modified: Update VO field labels as alternate keys.
+#   Last Modified: Update for r_a/dec name reversion. Update test file count and constants.
 #
 import unittest
 from astropy.io import fits
@@ -28,7 +28,9 @@ class FitsOpsTestCase(unittest.TestCase):
     cls.default_options = {}
     cls.test_file = "resources/cvnidwabcut.fits"
     cls.test_file2 = "resources/m13.fits"
-    cls.test_file_md_count = 64
+    cls.test_file_md_count = 66             # 55 native + 11 generated entries
+    cls.test_file_hist_count = 2            # 2 HISTORY entries (often filtered out)
+    cls.test_file_auto_added = 2            # right_ascension & declination added automatically
     cls.test_dir = "resources"
     cls.test_dir_file_count = 4
     cls.empty_dir = "resources/empty_dir"
@@ -46,55 +48,55 @@ class HandleCtypeMappingTestCase(FitsOpsTestCase):
     "Test valid CTYPE item with RA, no keys subset"
     md0 = self.fmeta.metadata()
     mdk0 = [md[0] for md in md0]
-    self.assertNotIn("dec", mdk0)
-    self.assertNotIn("ra", mdk0)
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
     fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "RA--TAN"), [])
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
-    self.assertNotIn("dec", mdk1)
-    self.assertIn("ra", mdk1)
+    self.assertNotIn("declination", mdk1)
+    self.assertIn("right_ascension", mdk1)
 
   def test_swapped_ctype_no_ks(self):
     "Test valid CTYPE item with DEC, no keys subset"
     md0 = self.fmeta.metadata()
     mdk0 = [md[0] for md in md0]
-    self.assertNotIn("dec", mdk0)
-    self.assertNotIn("ra", mdk0)
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
     fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "DEC--TAN"), [])
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
-    self.assertIn("dec", mdk1)
-    self.assertNotIn("ra", mdk1)
+    self.assertIn("declination", mdk1)
+    self.assertNotIn("right_ascension", mdk1)
 
   def test_ctype_ks(self):
     "Test valid CTYPE item with RA, keys subset"
     md0 = self.fmeta.metadata()
     mdk0 = [md[0] for md in md0]
     ksub = ["NAXIS"]
-    self.assertNotIn("dec", mdk0)
-    self.assertNotIn("ra", mdk0)
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
     fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "RA--TAN"), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
-    self.assertNotIn("dec", mdk1)
-    self.assertNotIn("dec", ksub)
-    self.assertIn("ra", mdk1)
-    self.assertIn("ra", ksub)
+    self.assertNotIn("declination", mdk1)
+    self.assertNotIn("declination", ksub)
+    self.assertIn("right_ascension", mdk1)
+    self.assertIn("right_ascension", ksub)
 
   def test_swapped_ctype_ks(self):
     "Test valid CTYPE item with DEC, keys subset"
     md0 = self.fmeta.metadata()
     mdk0 = [md[0] for md in md0]
     ksub = ["NAXIS"]
-    self.assertNotIn("dec", mdk0)
-    self.assertNotIn("ra", mdk0)
+    self.assertNotIn("declination", mdk0)
+    self.assertNotIn("right_ascension", mdk0)
     fo._handle_ctype_mapping(self.fmeta, Metadatum("CTYPE1", "DEC--TAN"), ksub)
     md1 = self.fmeta.metadata()
     mdk1 = [md[0] for md in md1]
-    self.assertNotIn("ra", mdk1)
-    self.assertNotIn("ra", ksub)
-    self.assertIn("dec", mdk1)
-    self.assertIn("dec", ksub)
+    self.assertNotIn("right_ascension", mdk1)
+    self.assertNotIn("right_ascension", ksub)
+    self.assertIn("declination", mdk1)
+    self.assertIn("declination", ksub)
 
 
 
@@ -265,8 +267,8 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertEqual(len(metadata), self.test_file_md_count)
     mdkeys = [md[0] for md in metadata]
     self.assertIn(FILEPATH_KEY, mdkeys)
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
 
   def test_md_standard_keys(self):
     "Standard keys are extracted to metadata"
@@ -276,8 +278,8 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertEqual(len(metadata), self.test_file_md_count)
     mdkeys = [md[0] for md in metadata]
     self.assertIn(FILEPATH_KEY, mdkeys)
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
     self.assertIn("NAXIS", mdkeys)
     self.assertIn("NAXIS1", mdkeys)
     self.assertIn("NAXIS2", mdkeys)
@@ -295,8 +297,10 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertEqual(len(metadata), self.test_file_md_count)
     mdkeys = [md[0] for md in metadata]
     self.assertIn(FILEPATH_KEY, mdkeys)
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_dec", mdkeys)
     self.assertIn("sxel1", mdkeys)
     self.assertIn("sxel2", mdkeys)
     self.assertIn("t_min", mdkeys)
@@ -312,51 +316,70 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertEqual(len(metadata), self.test_file_md_count)
     mdkeys = [md[0] for md in metadata]
     self.assertIn(FILEPATH_KEY, mdkeys)
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("s_dec", mdkeys)
 
   def test_keys_subset_1(self):
     "Extract metadata for singleton keys_subset"
     ksubset = ["ORIGIN"]
-    ks_len = 2 + len(ksubset)               # RA and DEC added automatically
+    # keyword + right_ascension & declination + VO copies of right_ascension & declination
+    ks_len = len(ksubset) + (2 * self.test_file_auto_added)
     metadata = fo.fits_metadata(self.test_file, {"keys_subset": ksubset})
     self.assertNotEqual(metadata, None)
     # [print(item) for item in metadata]      # DEBUGGING
     self.assertEqual(len(metadata), ks_len)
     mdkeys = [md[0] for md in metadata]
     self.assertNotIn(FILEPATH_KEY, mdkeys)
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("s_dec", mdkeys)
     for key in ksubset:
       self.assertIn(key, mdkeys)
 
   def test_keys_subset_no_alt(self):
     "Extract metadata for specified keys_subset which has no alternative keys"
     ksubset = ["CRPIX1", "CRPIX2", "ELEVATIO", "AIRMASS"]
-    ks_len = 2 + len(ksubset)               # RA and DEC added automatically
+    # keywords + right_ascension & declination + VO copies of right_ascension & declination
+    ks_len = len(ksubset) + (2 * self.test_file_auto_added)
     metadata = fo.fits_metadata(self.test_file, {"keys_subset": ksubset})
     self.assertNotEqual(metadata, None)
     # [print(item) for item in metadata]      # DEBUGGING
     self.assertEqual(len(metadata), ks_len)
     mdkeys = [md[0] for md in metadata]
     self.assertNotIn(FILEPATH_KEY, mdkeys)
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("s_dec", mdkeys)
     for key in ksubset:
       self.assertIn(key, mdkeys)
 
   def test_keys_subset_all_alt(self):
     "Extract metadata for specified keys_subset, all of which have alternative keys"
     ksubset = ["NAXIS1", "NAXIS2", "DATE-OBS", "INSTRUME"]
-    ks_len = 2 + (2 * len(ksubset))         # RA and DEC added automatically
+    # keywords doubled + right_ascension & declination + VO copies of right_ascension & declination
+    ks_len = (2 * len(ksubset)) + (2 * self.test_file_auto_added)
     metadata = fo.fits_metadata(self.test_file, {"keys_subset": ksubset})
     self.assertNotEqual(metadata, None)
     # [print(item) for item in metadata]      # DEBUGGING
     self.assertEqual(len(metadata), ks_len)
     mdkeys = [md[0] for md in metadata]
     self.assertNotIn(FILEPATH_KEY, mdkeys)
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_dec", mdkeys)
+    self.assertIn("NAXIS1", mdkeys)
+    self.assertIn("sxel1", mdkeys)
+    self.assertIn("NAXIS2", mdkeys)
+    self.assertIn("sxel2", mdkeys)
+    self.assertIn("DATE-OBS", mdkeys)
+    self.assertIn("t_min", mdkeys)
+    self.assertIn("INSTRUME", mdkeys)
+    self.assertIn("instrument_name", mdkeys)
     for key in ksubset:
       self.assertIn(key, mdkeys)
 
@@ -371,8 +394,10 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     mdkeys = [md[0] for md in metadata]
     self.assertIn(FILEPATH_KEY, mdkeys)
     self.assertIn("HISTORY", mdkeys)        # should be present
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("s_dec", mdkeys)
     self.assertIn("NAXIS", mdkeys)          # some FITS keys
     self.assertIn("INSTRUME", mdkeys)
     self.assertIn("OBSERVER", mdkeys)
@@ -388,12 +413,14 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     self.assertNotEqual(metadata, None)
     # for md in metadata:
     #   print("{}: {}".format(md.keyword, md.value))
-    self.assertEqual(len(metadata), self.test_file_md_count - 2) # HISTORY twice in test file
+    self.assertEqual(len(metadata), self.test_file_md_count - self.test_file_hist_count)
     mdkeys = [md[0] for md in metadata]
     self.assertIn(FILEPATH_KEY, mdkeys)
     self.assertNotIn("HISTORY", mdkeys)     # should be ignored
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("s_dec", mdkeys)
     self.assertIn("NAXIS", mdkeys)          # some FITS keys
     self.assertIn("INSTRUME", mdkeys)
     self.assertIn("OBSERVER", mdkeys)
@@ -413,8 +440,10 @@ class FitsMetadataTestCase(FitsOpsTestCase):
     mdkeys = [md[0] for md in metadata]
     self.assertIn(FILEPATH_KEY, mdkeys)
     self.assertIn("HISTORY", mdkeys)        # should be present
-    self.assertIn("ra", mdkeys)
-    self.assertIn("dec", mdkeys)
+    self.assertIn("right_ascension", mdkeys)
+    self.assertIn("declination", mdkeys)
+    self.assertIn("s_ra", mdkeys)
+    self.assertIn("s_dec", mdkeys)
     self.assertNotIn("NAXIS", mdkeys)       # explicitly removed
     self.assertNotIn("CDELT1", mdkeys)      # explicitly removed
     self.assertIn("CDELT2", mdkeys)         # still present: unaffected by similar name
