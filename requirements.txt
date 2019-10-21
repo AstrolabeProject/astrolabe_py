@@ -27,5 +27,5 @@ snowballstemmer==1.2.1
 Sphinx==1.7.6
 sphinx-rtd-theme==0.4.1
 sphinxcontrib-websupport==1.1.0
-urllib3==1.23
+urllib3==1.24.2
 xmlrunner==1.7.7
