@@ -5,7 +5,7 @@ Astrolabe Python Library
     :target: http://www.astropy.org
     :alt: Powered by Astropy Badge
 
-:Version: 1.1.0
+:Version: 1.1.1
 :Author: Tom Hicks <hickst@email.arizona.edu>
 
 | This is a Python 3 library for curating image and data files for the `Astrolabe project <http://astrolabe.arizona.edu/>`_
